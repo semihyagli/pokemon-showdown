@@ -17,4 +17,33 @@ describe('pokemon-search engine', () => {
 			assert.deepEqual(engine.speedRange(100), { min0iv: 94, min31iv: 108, max: 167 });
 		});
 	});
+
+	describe('buildIndex(9)', () => {
+		const index = engine.buildIndex(9);
+
+		it('indexes a stable species with correct info', () => {
+			const lando = index.species.get('landorustherian');
+			assert(lando, 'Landorus-Therian should be present');
+			assert.equal(lando.name, 'Landorus-Therian');
+			assert.deepEqual(lando.types, ['Ground', 'Flying']);
+			assert(lando.abilities.includes('Intimidate'));
+			assert.equal(lando.baseSpe, 91);
+			assert.deepEqual(lando.speRange, engine.speedRange(91));
+		});
+
+		it('maps abilities to species (reverse index)', () => {
+			assert(index.abilityToSpecies.get('intimidate').has('landorustherian'));
+		});
+
+		it('maps gen-9-learnable moves to species', () => {
+			assert(index.moveToSpecies.get('thunderbolt').has('pikachu'));
+			assert(index.moveToSpecies.get('earthquake').has('landorustherian'));
+		});
+
+		it('excludes non-standard fakemon (CAP) from the pool', () => {
+			for (const info of index.species.values()) {
+				assert.notEqual(info.name, 'Syclant'); // a CAP species
+			}
+		});
+	});
 });
