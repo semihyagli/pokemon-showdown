@@ -57,7 +57,13 @@
 		<p id="status"></p>
 		<table id="results" hidden>
 			<thead>
-				<tr><th>Dex #</th><th>Pokémon</th><th>Types</th><th>Base Spe</th><th>Spe range L50</th></tr>
+				<tr>
+					<th class="sortable" data-sort="num">Dex #<span class="arrow"></span></th>
+					<th class="sortable" data-sort="name">Pokémon<span class="arrow"></span></th>
+					<th>Types</th>
+					<th class="sortable" data-sort="baseSpe">Base Spe<span class="arrow"></span></th>
+					<th class="sortable" data-sort="speL50">Spe range L50<span class="arrow"></span></th>
+				</tr>
 			</thead>
 			<tbody></tbody>
 		</table>

@@ -6,6 +6,35 @@ const $ = id => document.getElementById(id);
 let lastResults = [];
 let searched = false;
 
+// Click-to-sort: ascending comparator per column; clicking a header toggles
+// direction. A secondary sort by dex number / name keeps ties stable.
+const SORT_KEYS = {
+	num: (a, b) => a.num - b.num,
+	name: (a, b) => a.name.localeCompare(b.name),
+	baseSpe: (a, b) => a.baseSpe - b.baseSpe,
+	speL50: (a, b) => a.speRange.max - b.speRange.max,
+};
+let sortKey = 'num';
+let sortDir = 1;
+
+function updateSortIndicators() {
+	for (const th of document.querySelectorAll('th.sortable')) {
+		const active = th.dataset.sort === sortKey;
+		th.classList.toggle('sorted', active);
+		th.querySelector('.arrow').textContent = active ? (sortDir === 1 ? ' ↑' : ' ↓') : '';
+	}
+}
+
+function sortBy(key) {
+	if (key === sortKey) {
+		sortDir = -sortDir;
+	} else {
+		sortKey = key;
+		sortDir = 1;
+	}
+	render();
+}
+
 function fillSelect(select, values, { keepFirst = true, mapValue = v => v, mapLabel = v => v } = {}) {
 	const first = keepFirst && select.options.length ? select.options[0] : null;
 	select.innerHTML = '';
@@ -50,8 +79,10 @@ function render() {
 	const tbody = table.querySelector('tbody');
 	tbody.innerHTML = '';
 
+	const cmp = SORT_KEYS[sortKey];
+	const sorted = [...lastResults].sort((a, b) => cmp(a, b) * sortDir || a.num - b.num || a.name.localeCompare(b.name));
 	let shown = 0;
-	for (const r of lastResults) {
+	for (const r of sorted) {
 		const floorSpe = floor === '31iv' ? r.speRange.min31iv : r.speRange.min0iv;
 		const inRange = speed > 0 && speed >= floorSpe && speed <= r.speRange.max;
 		if (onlyMatches && speed > 0 && !inRange) continue;
@@ -65,6 +96,7 @@ function render() {
 
 	table.hidden = shown === 0;
 	$('status').textContent = shown ? `${shown} match${shown === 1 ? '' : 'es'}` : 'No matches';
+	updateSortIndicators();
 }
 
 async function runSearch(e) {
@@ -91,4 +123,5 @@ $('search-form').addEventListener('submit', runSearch);
 $('speed').addEventListener('input', render);
 for (const radio of document.querySelectorAll('input[name=floor]')) radio.addEventListener('change', render);
 $('speed-filter').addEventListener('change', render);
+for (const th of document.querySelectorAll('th.sortable')) th.addEventListener('click', () => sortBy(th.dataset.sort));
 loadMeta();
