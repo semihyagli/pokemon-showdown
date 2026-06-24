@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Pokémon Search</title>
+	<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+	<main>
+		<h1>Pokémon search</h1>
+		<form id="search-form">
+			<div class="row">
+				<label>Generation
+					<select id="gen" name="gen"></select>
+				</label>
+				<label>Format (optional)
+					<select id="format" name="format"><option value="">— none —</option></select>
+				</label>
+			</div>
+			<label>Ability
+				<select id="ability" name="ability"><option value="">— any —</option></select>
+			</label>
+			<fieldset>
+				<legend>Moves (up to 4 — must learn all)</legend>
+				<div class="row">
+					<select class="move" data-slot="0"><option value="">— any —</option></select>
+					<select class="move" data-slot="1"><option value="">— any —</option></select>
+				</div>
+				<div class="row">
+					<select class="move" data-slot="2"><option value="">— any —</option></select>
+					<select class="move" data-slot="3"><option value="">— any —</option></select>
+				</div>
+			</fieldset>
+			<div class="row">
+				<label>Type 1
+					<select id="type1"><option value="">— any —</option></select>
+				</label>
+				<label>Type 2
+					<select id="type2"><option value="">— none —</option></select>
+				</label>
+			</div>
+			<div class="row">
+				<label>Speed @ Lv 50
+					<input type="number" id="speed" min="1" max="1000" placeholder="e.g. 120">
+				</label>
+				<label>Min-IV floor
+					<span class="floor">
+						<label><input type="radio" name="floor" value="0iv" checked> 0 IV</label>
+						<label><input type="radio" name="floor" value="31iv"> 31 IV</label>
+					</span>
+				</label>
+			</div>
+			<button type="submit">Search</button>
+		</form>
+		<p id="status"></p>
+		<table id="results" hidden>
+			<thead>
+				<tr><th>Pokémon</th><th>Types</th><th>Base Spe</th><th>Spe range L50</th><th id="fit-col">Fits?</th></tr>
+			</thead>
+			<tbody></tbody>
+		</table>
+	</main>
+	<script src="/app.js"></script>
+</body>
+</html>
