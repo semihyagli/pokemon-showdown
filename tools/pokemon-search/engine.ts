@@ -112,3 +112,83 @@ export function buildIndex(gen: number): GenIndex {
 	indexCache.set(gen, index);
 	return index;
 }
+
+export interface SearchCriteria {
+	gen: number;
+	formatId?: string;
+	ability?: string;
+	moves?: string[];
+	types?: string[];
+	speed?: number;
+	floor?: '0iv' | '31iv';
+}
+
+export function formatPool(formatId: string): { gen: number, allowed: Set<string> } | null {
+	const format = Dex.formats.get(formatId);
+	if (!format.exists) return null;
+	const fdex = Dex.forFormat(format);
+	const gen = fdex.gen;
+	const ruleTable = Dex.formats.getRuleTable(format);
+	const index = buildIndex(gen);
+	const allowed = new Set<string>();
+	for (const id of index.species.keys()) {
+		if (!ruleTable.isBannedSpecies(fdex.species.get(id))) allowed.add(id);
+	}
+	return { gen, allowed };
+}
+
+function intersect(a: Set<string>, b: Set<string>): Set<string> {
+	const out = new Set<string>();
+	for (const x of a) {
+		if (b.has(x)) out.add(x);
+	}
+	return out;
+}
+
+export function search(criteria: SearchCriteria): SpeciesInfo[] {
+	let gen = criteria.gen;
+	let pool: Set<string> | null = null;
+	if (criteria.formatId) {
+		const fp = formatPool(criteria.formatId);
+		if (!fp) throw new Error(`Unknown format: ${criteria.formatId}`);
+		gen = fp.gen;
+		pool = fp.allowed;
+	}
+
+	const index = buildIndex(gen);
+	let candidates = new Set(index.species.keys());
+	if (pool) candidates = intersect(candidates, pool);
+
+	// Unknown ability/move ids are skipped (ignored), not treated as "zero matches",
+	// per the spec. Dropdown-sourced values always exist in the index, so this only
+	// affects hand-typed/URL-hacked values.
+	if (criteria.ability) {
+		const set = index.abilityToSpecies.get(toID(criteria.ability));
+		if (set) candidates = intersect(candidates, set);
+	}
+	if (criteria.moves) {
+		for (const move of criteria.moves) {
+			const set = index.moveToSpecies.get(toID(move));
+			if (set) candidates = intersect(candidates, set);
+		}
+	}
+
+	const wantedTypes = (criteria.types ?? []).map(t => t.toLowerCase()).filter(Boolean);
+
+	const results: SpeciesInfo[] = [];
+	for (const id of candidates) {
+		const info = index.species.get(id);
+		if (!info) continue;
+		if (wantedTypes.length) {
+			const have = info.types.map(t => t.toLowerCase());
+			if (!wantedTypes.every(t => have.includes(t))) continue;
+		}
+		if (criteria.speed !== undefined && !Number.isNaN(criteria.speed)) {
+			const floor = criteria.floor === '31iv' ? info.speRange.min31iv : info.speRange.min0iv;
+			if (criteria.speed < floor || criteria.speed > info.speRange.max) continue;
+		}
+		results.push(info);
+	}
+	results.sort((a, b) => b.baseSpe - a.baseSpe || a.num - b.num);
+	return results;
+}

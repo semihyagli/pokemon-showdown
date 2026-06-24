@@ -46,4 +46,50 @@ describe('pokemon-search engine', () => {
 			}
 		});
 	});
+
+	describe('search', () => {
+		it('ANDs ability + dual typing', () => {
+			const results = engine.search({ gen: 9, ability: 'Intimidate', types: ['Ground', 'Flying'] });
+			const ids = results.map(r => r.id);
+			assert(ids.includes('landorustherian'));
+		});
+
+		it('requires ALL listed moves (intersection)', () => {
+			const results = engine.search({ gen: 9, moves: ['earthquake', 'uturn'], types: ['Ground', 'Flying'] });
+			assert(results.some(r => r.id === 'landorustherian'));
+		});
+
+		it('treats one type as "has that type" (mono or dual)', () => {
+			const results = engine.search({ gen: 9, types: ['Flying'] });
+			assert(results.some(r => r.id === 'landorustherian'));
+		});
+
+		it('filters by level-50 speed range inclusive of bounds', () => {
+			const lando = engine.buildIndex(9).species.get('landorustherian');
+			const atMax = engine.search({ gen: 9, ability: 'Intimidate', speed: lando.speRange.max, floor: '0iv' });
+			assert(atMax.some(r => r.id === 'landorustherian'));
+			const tooFast = engine.search({ gen: 9, ability: 'Intimidate', speed: lando.speRange.max + 1, floor: '0iv' });
+			assert(!tooFast.some(r => r.id === 'landorustherian'));
+		});
+
+		it('uses the 31iv floor (higher) when floor is 31iv', () => {
+			const lando = engine.buildIndex(9).species.get('landorustherian');
+			const atFloor = engine.search({ gen: 9, ability: 'Intimidate', speed: lando.speRange.min31iv, floor: '31iv' });
+			assert(atFloor.some(r => r.id === 'landorustherian'));
+			const belowFloor = engine.search({ gen: 9, ability: 'Intimidate', speed: lando.speRange.min0iv, floor: '31iv' });
+			assert(!belowFloor.some(r => r.id === 'landorustherian'));
+		});
+
+		it('sorts results by base speed descending', () => {
+			const results = engine.search({ gen: 9, types: ['Dragon'] });
+			for (let i = 1; i < results.length; i++) {
+				assert(results[i - 1].baseSpe >= results[i].baseSpe);
+			}
+		});
+
+		it('applies a format pool (Ubers banned from OU)', () => {
+			const ou = engine.search({ gen: 9, formatId: 'gen9ou', types: ['Psychic'] });
+			assert(!ou.some(r => r.id === 'mewtwo'), 'Mewtwo (Uber) must be excluded from OU');
+		});
+	});
 });
