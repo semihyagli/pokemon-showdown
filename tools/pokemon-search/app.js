@@ -21,7 +21,7 @@ function updateSortIndicators() {
 	for (const th of document.querySelectorAll('th.sortable')) {
 		const active = th.dataset.sort === sortKey;
 		th.classList.toggle('sorted', active);
-		th.querySelector('.arrow').textContent = active ? (sortDir === 1 ? ' ↑' : ' ↓') : '';
+		th.querySelector('.arrow').textContent = active ? (sortDir === 1 ? '↑' : '↓') : '';
 	}
 }
 

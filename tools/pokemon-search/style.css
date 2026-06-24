@@ -20,6 +20,6 @@ thead th { border-top: none; color: #5a5d63; }
 th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 th.sortable:hover { color: #1c1d20; }
 th.sorted { color: #1c1d20; }
-.arrow { color: #2f6feb; }
+.arrow { display: inline-block; width: 1em; margin-left: 2px; text-align: center; color: #2f6feb; }
 td.in-range { color: #126b2c; background: #e7f6ec; font-weight: 500; }
 td.out-range { color: #b42318; background: #fdeceb; font-weight: 500; }
