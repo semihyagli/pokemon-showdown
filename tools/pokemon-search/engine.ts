@@ -189,7 +189,7 @@ export function search(criteria: SearchCriteria): SpeciesInfo[] {
 		}
 		results.push(info);
 	}
-	results.sort((a, b) => b.baseSpe - a.baseSpe || a.num - b.num);
+	results.sort((a, b) => a.num - b.num || a.name.localeCompare(b.name));
 	return results;
 }
 

@@ -80,10 +80,10 @@ describe('pokemon-search engine', () => {
 			assert(!belowFloor.some(r => r.id === 'landorustherian'));
 		});
 
-		it('sorts results by base speed descending', () => {
+		it('sorts results by national dex number ascending', () => {
 			const results = engine.search({ gen: 9, types: ['Dragon'] });
 			for (let i = 1; i < results.length; i++) {
-				assert(results[i - 1].baseSpe >= results[i].baseSpe);
+				assert(results[i - 1].num <= results[i].num);
 			}
 		});
 

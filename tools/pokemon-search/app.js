@@ -58,7 +58,7 @@ function render() {
 		const cls = speed > 0 ? (inRange ? 'in-range' : 'out-range') : '';
 		const range = `${floorSpe}–${r.speRange.max}`;
 		const tr = document.createElement('tr');
-		tr.innerHTML = `<td>${r.name}</td><td>${r.types.join(' / ')}</td><td>${r.baseSpe}</td><td class="${cls}">${range}</td>`;
+		tr.innerHTML = `<td>${r.num}</td><td>${r.name}</td><td>${r.types.join(' / ')}</td><td>${r.baseSpe}</td><td class="${cls}">${range}</td>`;
 		tbody.appendChild(tr);
 		shown++;
 	}
