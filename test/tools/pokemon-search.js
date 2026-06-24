@@ -108,4 +108,35 @@ describe('pokemon-search engine', () => {
 			assert(meta.formats.some(f => f.id === 'gen9ou'));
 		});
 	});
+
+	describe('http server', () => {
+		const { startServer } = require('../../dist/tools/pokemon-search/server');
+		let server, base;
+		before(done => {
+			server = startServer(0);
+			server.listen(0, () => {
+				base = `http://localhost:${server.address().port}`;
+				done();
+			});
+		});
+		after(() => server.close());
+
+		it('serves /api/meta', async () => {
+			const res = await fetch(`${base}/api/meta?gen=9`);
+			const body = await res.json();
+			assert(body.abilities.includes('Intimidate'));
+		});
+
+		it('serves /api/search', async () => {
+			const res = await fetch(`${base}/api/search?gen=9&ability=Intimidate&types=Ground,Flying`);
+			const body = await res.json();
+			assert(body.count >= 1);
+			assert(body.results.some(r => r.id === 'landorustherian'));
+		});
+
+		it('returns 400 for an invalid generation', async () => {
+			const res = await fetch(`${base}/api/search?gen=99`);
+			assert.equal(res.status, 400);
+		});
+	});
 });
