@@ -92,4 +92,20 @@ describe('pokemon-search engine', () => {
 			assert(!ou.some(r => r.id === 'mewtwo'), 'Mewtwo (Uber) must be excluded from OU');
 		});
 	});
+
+	describe('getMeta', () => {
+		const meta = engine.getMeta(9);
+		it('lists generations 1..current dynamically', () => {
+			assert.deepEqual(meta.generations, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+		});
+		it('lists abilities, moves, and types present in the gen', () => {
+			assert(meta.abilities.includes('Intimidate'));
+			assert(meta.moves.includes('Earthquake'));
+			assert(meta.types.includes('Ground'));
+			assert(!meta.types.includes('Stellar')); // not a defensive species type
+		});
+		it('includes playable formats', () => {
+			assert(meta.formats.some(f => f.id === 'gen9ou'));
+		});
+	});
 });

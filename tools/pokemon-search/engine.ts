@@ -192,3 +192,48 @@ export function search(criteria: SearchCriteria): SpeciesInfo[] {
 	results.sort((a, b) => b.baseSpe - a.baseSpe || a.num - b.num);
 	return results;
 }
+
+export interface Meta {
+	generations: number[];
+	formats: { id: string, name: string }[];
+	abilities: string[];
+	moves: string[];
+	types: string[];
+}
+
+export function getMeta(gen: number, formatId?: string): Meta {
+	let effectiveGen = gen;
+	if (formatId) {
+		const fp = formatPool(formatId);
+		if (fp) effectiveGen = fp.gen;
+	}
+	const index = buildIndex(effectiveGen);
+	const dex = Dex.forGen(effectiveGen);
+
+	const abilitySet = new Set<string>();
+	const typeSet = new Set<string>();
+	for (const info of index.species.values()) {
+		for (const ability of info.abilities) abilitySet.add(ability);
+		for (const type of info.types) typeSet.add(type);
+	}
+	const moves: string[] = [];
+	for (const moveId of index.moveToSpecies.keys()) moves.push(dex.moves.get(moveId).name);
+
+	// `Dex.gen` is the latest generation (e.g. 9). It is 0 until data has loaded,
+	// but `buildIndex` above always triggers a load first, so it is populated here.
+	const generations: number[] = [];
+	for (let g = 1; g <= Dex.gen; g++) generations.push(g);
+
+	const formats: { id: string, name: string }[] = [];
+	for (const format of Dex.formats.all()) {
+		if (format.effectType === 'Format') formats.push({ id: format.id, name: format.name });
+	}
+
+	return {
+		generations,
+		formats,
+		abilities: [...abilitySet].sort(),
+		moves: moves.sort(),
+		types: [...typeSet].sort(),
+	};
+}
