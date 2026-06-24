@@ -16,4 +16,6 @@ button:hover { background: #275ec9; }
 table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e2e4e8; border-radius: 12px; overflow: hidden; }
 th, td { text-align: left; padding: 8px 10px; font-size: 13px; border-top: 1px solid #eef0f3; }
 thead th { border-top: none; color: #5a5d63; }
-.yes { color: #1a7f37; } .no { color: #99a0a8; }
+.checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #1c1d20; }
+td.in-range { color: #126b2c; background: #e7f6ec; font-weight: 500; }
+td.out-range { color: #b42318; background: #fdeceb; font-weight: 500; }

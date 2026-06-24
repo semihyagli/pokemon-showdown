@@ -3,6 +3,9 @@
 
 const $ = id => document.getElementById(id);
 
+let lastResults = [];
+let searched = false;
+
 function fillSelect(select, values, { keepFirst = true, mapValue = v => v, mapLabel = v => v } = {}) {
 	const first = keepFirst && select.options.length ? select.options[0] : null;
 	select.innerHTML = '';
@@ -33,25 +36,35 @@ async function loadMeta() {
 	fillSelect($('type2'), meta.types);
 }
 
-function renderResults(body, targetSpeed) {
+// Speed is handled entirely client-side: each result carries its level-50 speed
+// range, so the desired speed only colors the range cell (green in range, red
+// out) and — when "only show matches" is checked — filters non-matching rows.
+// Re-rendering from the stored results makes the speed/floor/checkbox controls
+// update instantly without a new search.
+function render() {
+	if (!searched) return;
+	const speed = Number($('speed').value) || 0;
+	const floor = document.querySelector('input[name=floor]:checked').value;
+	const onlyMatches = $('speed-filter').checked;
 	const table = $('results');
 	const tbody = table.querySelector('tbody');
 	tbody.innerHTML = '';
-	$('fit-col').textContent = targetSpeed ? `${targetSpeed}?` : 'Spe';
-	for (const r of body.results) {
+
+	let shown = 0;
+	for (const r of lastResults) {
+		const floorSpe = floor === '31iv' ? r.speRange.min31iv : r.speRange.min0iv;
+		const inRange = speed > 0 && speed >= floorSpe && speed <= r.speRange.max;
+		if (onlyMatches && speed > 0 && !inRange) continue;
+		const cls = speed > 0 ? (inRange ? 'in-range' : 'out-range') : '';
+		const range = `${floorSpe}–${r.speRange.max}`;
 		const tr = document.createElement('tr');
-		const range = `${r.speRange.min0iv}–${r.speRange.max}`;
-		let fit = '';
-		if (targetSpeed) {
-			const floor = document.querySelector('input[name=floor]:checked').value === '31iv' ? r.speRange.min31iv : r.speRange.min0iv;
-			const ok = targetSpeed >= floor && targetSpeed <= r.speRange.max;
-			fit = `<span class="${ok ? 'yes' : 'no'}">${ok ? 'yes' : 'no'}</span>`;
-		}
-		tr.innerHTML = `<td>${r.name}</td><td>${r.types.join(' / ')}</td><td>${r.baseSpe}</td><td>${range}</td><td>${fit}</td>`;
+		tr.innerHTML = `<td>${r.name}</td><td>${r.types.join(' / ')}</td><td>${r.baseSpe}</td><td class="${cls}">${range}</td>`;
 		tbody.appendChild(tr);
+		shown++;
 	}
-	table.hidden = body.results.length === 0;
-	$('status').textContent = body.count ? `${body.count} match${body.count === 1 ? '' : 'es'}` : 'No matches';
+
+	table.hidden = shown === 0;
+	$('status').textContent = shown ? `${shown} match${shown === 1 ? '' : 'es'}` : 'No matches';
 }
 
 async function runSearch(e) {
@@ -64,16 +77,18 @@ async function runSearch(e) {
 	if (moves.length) params.set('moves', moves.join(','));
 	const types = [$('type1').value, $('type2').value].filter(Boolean);
 	if (types.length) params.set('types', types.join(','));
-	const speed = $('speed').value;
-	if (speed) params.set('speed', speed);
-	params.set('floor', document.querySelector('input[name=floor]:checked').value);
 
 	$('status').textContent = 'Searching…';
 	const body = await (await fetch(`/api/search?${params}`)).json();
-	renderResults(body, speed ? Number(speed) : null);
+	lastResults = body.results;
+	searched = true;
+	render();
 }
 
 $('gen').addEventListener('change', loadMeta);
 $('format').addEventListener('change', loadMeta);
 $('search-form').addEventListener('submit', runSearch);
+$('speed').addEventListener('input', render);
+for (const radio of document.querySelectorAll('input[name=floor]')) radio.addEventListener('change', render);
+$('speed-filter').addEventListener('change', render);
 loadMeta();
