@@ -96,7 +96,7 @@ Responsibilities and approximate signatures:
     learnset sources include the selected generation (same gen check as the
     sketch: a source string whose leading gen number equals `gen`).
   - `species: Map<speciesId, SpeciesInfo>` where `SpeciesInfo` =
-    `{ name, types: string[], abilities: string[], baseSpe, speRange: { min0iv, min31iv, max } }`
+    `{ num, name, types: string[], abilities: string[], baseStats: Record<StatKey, number>, speRange: { min0iv, min31iv, max } }`
   - Speed bounds: `max` = 252 EV / 31 IV / +nature (×1.1); `min0iv` = 0 EV /
     0 IV / −nature (×0.9); `min31iv` = 0 EV / 31 IV / −nature (×0.9). Both
     floors precomputed so the UI toggle is instant.
@@ -125,12 +125,30 @@ Responsibilities and approximate signatures:
 
 ### Frontend (index.html / app.js / style.css)
 
-Layout (per approved mockup): Generation + Format selects; Ability select; four
-move selects (2×2, each defaulting to "— any —"); Type 1 + Type 2 selects (Type
-2 includes "— none —"); a Speed number field with a 0 IV / 31 IV radio toggle; a
-Search button; a results table with columns Pokémon, Types, Base Spe, Spe range
-@ L50, and a "fits target?" check. On load and whenever gen/format changes, fetch
-`/api/meta` to repopulate selects; on Search, fetch `/api/search` and render.
+Form: Generation + Format selects; Ability select; four move selects (2×2, each
+defaulting to "— any —"); Type 1 + Type 2 selects (Type 2 includes "— none —"); a
+Speed number field with a 0 IV / 31 IV radio toggle; an "only show matches"
+checkbox; a Search button. On load and whenever gen/format changes, fetch
+`/api/meta` to repopulate selects; on Search, fetch `/api/search`, store the
+results, and render.
+
+Results table columns: Dex #, Pokémon, Types, HP, Atk, Def, SpA, SpD, Spe, EST,
+Spe range L50. The table is wrapped in a horizontal-scroll container so it never
+breaks the page on narrow viewports.
+
+- Speed is presentational, not a server filter: the Spe range L50 cell is
+  highlighted green when the entered speed is reachable (`floor ≤ speed ≤ max`,
+  floor per the 0 IV / 31 IV toggle) and red otherwise. The "only show matches"
+  checkbox additionally drops non-matching rows. This is computed client-side
+  from each result's `speRange`, so the speed/floor/checkbox controls re-render
+  instantly without a new search.
+- EST (effective stat total) = `HP + Def + SpD + Spe + max(Atk, SpA)`. Counting
+  only the larger of Atk/SpA reflects that a Pokémon is usually physical or
+  special, lightly penalizing mixed attackers.
+- Sorting: click a column header to sort by it (Dex #, Pokémon, any base stat,
+  EST, or Spe range max); click the active header again to toggle ascending /
+  descending (an arrow marks the active column). Default is Dex # ascending.
+  Sorting is client-side over the stored results.
 
 ## Search semantics
 
@@ -143,10 +161,12 @@ All filters are AND-ed; each is optional and applied only when set.
   (order-independent). One type → mono or dual containing it; two types → has
   both.
 - Ability: must have the ability in any slot (0/1/Hidden).
-- Speed: the entered integer must satisfy `min <= speed <= max`, where `min` is
-  `min0iv` or `min31iv` per the UI toggle and `max` is the 252/31/+nature value.
-- Empty filter set returns the whole (gen or format) pool. Results sorted by base
-  Speed descending.
+- Speed: NOT part of the server-side AND filter. It is applied client-side as a
+  highlight (and optional row filter) over the returned results — see Frontend.
+  (The `/api/search` endpoint still accepts `speed`/`floor` and will filter on
+  them if passed directly, but the UI does not send them.)
+- Empty filter set returns the whole (gen or format) pool. The server returns
+  results in dex-number order; the UI re-sorts per the clicked column header.
 
 ## Error handling
 
