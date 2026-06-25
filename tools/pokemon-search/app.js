@@ -79,6 +79,7 @@ function fillSelect(select, values, { keepFirst = true, mapValue = v => v, mapLa
 	}
 }
 
+const pinned = new Map();
 let speciesOptions = [];
 let abilityOptions = [];
 let moveOptions = [];
@@ -213,7 +214,9 @@ function render() {
 	const cmp = SORT_KEYS[sortKey];
 	const sorted = [...lastResults].sort((a, b) => cmp(a, b) * sortDir || a.num - b.num || a.name.localeCompare(b.name));
 	let shown = 0;
-	for (const r of sorted) {
+	const ordered = [...pinned.values(), ...sorted.filter(r => !pinned.has(r.id))];
+	for (const r of ordered) {
+		const isPinned = pinned.has(r.id);
 		const floorSpe = floor === '31iv' ? r.speRange.min31iv : r.speRange.min0iv;
 		const baseMax = r.speRange.max;
 		// Speed @ L50 ranges: base, Choice Scarf (×1.5), Tailwind (×2), Scarf+Tailwind (×3).
@@ -229,17 +232,18 @@ function render() {
 			if (slower > 0) match = match && lo < slower;
 			return { html: `<td class="${hasTarget ? (match ? 'in-range' : 'out-range') : ''}">${lo}–${hi}</td>`, red: hasTarget && !match };
 		});
-		if ([...speedFilters].some(col => speedCells[col].red)) continue;
+		if (!isPinned && [...speedFilters].some(col => speedCells[col].red)) continue;
 		const tr = document.createElement('tr');
+		if (isPinned) tr.className = 'pinned-row';
 		const b = r.baseStats;
 		const stats = [b.hp, b.atk, b.def, b.spa, b.spd, b.spe, est(r)].map(v => `<td class="num-col">${v}</td>`).join('');
-		tr.innerHTML = `<td>${r.num}</td><td>${r.name}</td><td>${r.types.join(' / ')}</td><td>${r.abilities.join(', ')}</td>${stats}${speedCells.map(c => c.html).join('')}`;
+		tr.innerHTML = `<td class="pin-cell" data-id="${r.id}" title="pin/unpin reference">${pinned.has(r.id) ? '★' : '☆'}</td><td>${r.num}</td><td>${r.name}</td><td>${r.types.join(' / ')}</td><td>${r.abilities.join(', ')}</td>${stats}${speedCells.map(c => c.html).join('')}`;
 		tbody.appendChild(tr);
-		shown++;
+		if (!isPinned) shown++;
 	}
 
-	table.hidden = shown === 0;
-	$('status').textContent = shown ? `${shown} match${shown === 1 ? '' : 'es'}` : 'No matches';
+	table.hidden = shown === 0 && pinned.size === 0;
+	$('status').textContent = (shown ? `${shown} match${shown === 1 ? '' : 'es'}` : 'No matches') + (pinned.size ? ` · ${pinned.size} pinned` : '');
 	updateSortIndicators();
 	updateSpeedFilterIndicators();
 }
@@ -273,6 +277,18 @@ $('slower').addEventListener('input', render);
 for (const radio of document.querySelectorAll('input[name=floor]')) radio.addEventListener('change', render);
 for (const th of document.querySelectorAll('th.speed-col')) th.addEventListener('click', () => toggleSpeedFilter(Number(th.dataset.col)));
 for (const th of document.querySelectorAll('th.sortable')) th.addEventListener('click', () => sortBy(th.dataset.sort));
+$('results').addEventListener('click', e => {
+	const cell = e.target.closest('.pin-cell');
+	if (!cell) return;
+	const id = cell.dataset.id;
+	if (pinned.has(id)) {
+		pinned.delete(id);
+	} else {
+		const info = lastResults.find(r => r.id === id);
+		if (info) pinned.set(id, info);
+	}
+	render();
+});
 setupAutocomplete($('species'), () => speciesOptions);
 setupAutocomplete($('ability'), () => abilityOptions);
 for (const inp of document.querySelectorAll('.move')) setupAutocomplete(inp, () => moveOptions);
