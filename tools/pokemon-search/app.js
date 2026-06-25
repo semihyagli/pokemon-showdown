@@ -100,11 +100,11 @@ function render() {
 	for (const r of sorted) {
 		const floorSpe = floor === '31iv' ? r.speRange.min31iv : r.speRange.min0iv;
 		const baseMax = r.speRange.max;
-		// Speed @ L50 ranges: base, Tailwind (×2), Choice Scarf (×1.5), Tailwind+Scarf (×3).
+		// Speed @ L50 ranges: base, Choice Scarf (×1.5), Tailwind (×2), Scarf+Tailwind (×3).
 		const speedRanges = [
 			[floorSpe, baseMax],
-			[floorSpe * 2, baseMax * 2],
 			[Math.floor(floorSpe * 1.5), Math.floor(baseMax * 1.5)],
+			[floorSpe * 2, baseMax * 2],
 			[floorSpe * 3, baseMax * 3],
 		];
 		const speedCells = speedRanges.map(([lo, hi]) => {
