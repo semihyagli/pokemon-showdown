@@ -55,18 +55,26 @@
 			<button type="submit">Search</button>
 		</form>
 		<p id="status"></p>
+		<div class="table-wrap">
 		<table id="results" hidden>
 			<thead>
 				<tr>
 					<th class="sortable" data-sort="num">Dex #<span class="arrow"></span></th>
 					<th class="sortable" data-sort="name">Pokémon<span class="arrow"></span></th>
 					<th>Types</th>
-					<th class="sortable" data-sort="baseSpe">Base Spe<span class="arrow"></span></th>
+					<th class="sortable num-col" data-sort="hp">HP<span class="arrow"></span></th>
+					<th class="sortable num-col" data-sort="atk">Atk<span class="arrow"></span></th>
+					<th class="sortable num-col" data-sort="def">Def<span class="arrow"></span></th>
+					<th class="sortable num-col" data-sort="spa">SpA<span class="arrow"></span></th>
+					<th class="sortable num-col" data-sort="spd">SpD<span class="arrow"></span></th>
+					<th class="sortable num-col" data-sort="spe">Spe<span class="arrow"></span></th>
+					<th class="sortable num-col" data-sort="est" title="Effective stat total: HP + Def + SpD + Spe + max(Atk, SpA)">EST<span class="arrow"></span></th>
 					<th class="sortable" data-sort="speL50">Spe range L50<span class="arrow"></span></th>
 				</tr>
 			</thead>
 			<tbody></tbody>
 		</table>
+		</div>
 	</main>
 	<script src="/app.js"></script>
 </body>

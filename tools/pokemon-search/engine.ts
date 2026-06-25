@@ -34,7 +34,7 @@ export interface SpeciesInfo {
 	num: number;
 	types: string[];
 	abilities: string[];
-	baseSpe: number;
+	baseStats: Record<StatKey, number>;
 	speRange: SpeRange;
 }
 
@@ -82,7 +82,7 @@ export function buildIndex(gen: number): GenIndex {
 			num: sp.num,
 			types: sp.types.slice(),
 			abilities: abilityNames,
-			baseSpe: sp.baseStats.spe,
+			baseStats: { ...sp.baseStats },
 			speRange: speedRange(sp.baseStats.spe),
 		});
 

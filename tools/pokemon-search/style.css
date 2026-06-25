@@ -15,6 +15,8 @@ button:hover { background: #275ec9; }
 #status { color: #5a5d63; font-size: 14px; }
 table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e2e4e8; border-radius: 12px; overflow: hidden; }
 th, td { text-align: left; padding: 8px 10px; font-size: 13px; border-top: 1px solid #eef0f3; }
+.num-col { text-align: center; padding-left: 6px; padding-right: 6px; }
+.table-wrap { overflow-x: auto; }
 thead th { border-top: none; color: #5a5d63; }
 .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #1c1d20; }
 th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }

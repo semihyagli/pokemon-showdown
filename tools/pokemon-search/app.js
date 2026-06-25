@@ -8,10 +8,23 @@ let searched = false;
 
 // Click-to-sort: ascending comparator per column; clicking a header toggles
 // direction. A secondary sort by dex number / name keeps ties stable.
+// Effective stat total: a Pokemon is usually a physical OR special attacker, so
+// only the larger of Atk/SpA is counted. This lightly penalizes mixed attackers.
+function est(r) {
+	const b = r.baseStats;
+	return b.hp + b.def + b.spd + b.spe + Math.max(b.atk, b.spa);
+}
+
 const SORT_KEYS = {
 	num: (a, b) => a.num - b.num,
 	name: (a, b) => a.name.localeCompare(b.name),
-	baseSpe: (a, b) => a.baseSpe - b.baseSpe,
+	hp: (a, b) => a.baseStats.hp - b.baseStats.hp,
+	atk: (a, b) => a.baseStats.atk - b.baseStats.atk,
+	def: (a, b) => a.baseStats.def - b.baseStats.def,
+	spa: (a, b) => a.baseStats.spa - b.baseStats.spa,
+	spd: (a, b) => a.baseStats.spd - b.baseStats.spd,
+	spe: (a, b) => a.baseStats.spe - b.baseStats.spe,
+	est: (a, b) => est(a) - est(b),
 	speL50: (a, b) => a.speRange.max - b.speRange.max,
 };
 let sortKey = 'num';
@@ -89,7 +102,9 @@ function render() {
 		const cls = speed > 0 ? (inRange ? 'in-range' : 'out-range') : '';
 		const range = `${floorSpe}–${r.speRange.max}`;
 		const tr = document.createElement('tr');
-		tr.innerHTML = `<td>${r.num}</td><td>${r.name}</td><td>${r.types.join(' / ')}</td><td>${r.baseSpe}</td><td class="${cls}">${range}</td>`;
+		const b = r.baseStats;
+		const stats = [b.hp, b.atk, b.def, b.spa, b.spd, b.spe, est(r)].map(v => `<td class="num-col">${v}</td>`).join('');
+		tr.innerHTML = `<td>${r.num}</td><td>${r.name}</td><td>${r.types.join(' / ')}</td>${stats}<td class="${cls}">${range}</td>`;
 		tbody.appendChild(tr);
 		shown++;
 	}

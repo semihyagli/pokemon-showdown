@@ -27,7 +27,8 @@ describe('pokemon-search engine', () => {
 			assert.equal(lando.name, 'Landorus-Therian');
 			assert.deepEqual(lando.types, ['Ground', 'Flying']);
 			assert(lando.abilities.includes('Intimidate'));
-			assert.equal(lando.baseSpe, 91);
+			assert.equal(lando.baseStats.spe, 91);
+			assert.equal(lando.baseStats.atk, 145);
 			assert.deepEqual(lando.speRange, engine.speedRange(91));
 		});
 
