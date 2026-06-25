@@ -54,7 +54,6 @@
 					<label><input type="radio" name="floor" value="31iv"> 31 IV</label>
 				</span>
 			</label>
-			<label class="checkbox-row"><input type="checkbox" id="speed-filter"> Only show Pokémon matching the speed criteria</label>
 			<button type="submit">Search</button>
 		</form>
 		<p id="status"></p>
@@ -73,10 +72,10 @@
 					<th class="sortable num-col" data-sort="spd">SpD<span class="arrow"></span></th>
 					<th class="sortable num-col" data-sort="spe">Spe<span class="arrow"></span></th>
 					<th class="sortable num-col" data-sort="est" title="Effective stat total: HP + Def + SpD + Spe + max(Atk, SpA)">EST<span class="arrow"></span></th>
-					<th class="sortable" data-sort="speL50">Spe@L50<span class="arrow"></span></th>
-					<th title="Speed @ L50 with Choice Scarf (×1.5)">Scarf</th>
-					<th title="Speed @ L50 with Tailwind (×2)">Tailwind</th>
-					<th title="Speed @ L50 with Choice Scarf + Tailwind (×3)">Scarf+Tailwind</th>
+					<th class="speed-col" data-col="0" title="Click to hide rows out of range (red) in this column">Spe@L50<span class="fil"></span></th>
+					<th class="speed-col" data-col="1" title="Speed @ L50 with Choice Scarf (×1.5). Click to hide red.">Scarf<span class="fil"></span></th>
+					<th class="speed-col" data-col="2" title="Speed @ L50 with Tailwind (×2). Click to hide red.">Tailwind<span class="fil"></span></th>
+					<th class="speed-col" data-col="3" title="Speed @ L50 with Choice Scarf + Tailwind (×3). Click to hide red.">Scarf+Tailwind<span class="fil"></span></th>
 				</tr>
 			</thead>
 			<tbody></tbody>

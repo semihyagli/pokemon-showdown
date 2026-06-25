@@ -23,5 +23,9 @@ th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 th.sortable:hover { color: #1c1d20; }
 th.sorted { color: #1c1d20; }
 .arrow { display: inline-block; width: 1em; margin-left: 2px; text-align: center; color: #2f6feb; }
+th.speed-col { cursor: pointer; user-select: none; white-space: nowrap; }
+th.speed-col:hover { color: #1c1d20; }
+th.filtering { color: #126b2c; }
+.fil { display: inline-block; width: 1em; margin-left: 2px; text-align: center; color: #126b2c; }
 td.in-range { color: #126b2c; background: #e7f6ec; font-weight: 500; }
 td.out-range { color: #b42318; background: #fdeceb; font-weight: 500; }

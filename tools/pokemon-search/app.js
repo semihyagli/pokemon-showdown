@@ -49,6 +49,24 @@ function sortBy(key) {
 	render();
 }
 
+// Click-to-filter on speed columns: each active column hides rows that are red
+// (out of the faster/slower range) in that column. Reset on every new search.
+const speedFilters = new Set();
+
+function updateSpeedFilterIndicators() {
+	for (const th of document.querySelectorAll('th.speed-col')) {
+		const active = speedFilters.has(Number(th.dataset.col));
+		th.classList.toggle('filtering', active);
+		th.querySelector('.fil').textContent = active ? '✓' : '';
+	}
+}
+
+function toggleSpeedFilter(col) {
+	if (speedFilters.has(col)) speedFilters.delete(col);
+	else speedFilters.add(col);
+	render();
+}
+
 function fillSelect(select, values, { keepFirst = true, mapValue = v => v, mapLabel = v => v } = {}) {
 	const first = keepFirst && select.options.length ? select.options[0] : null;
 	select.innerHTML = '';
@@ -82,16 +100,15 @@ async function loadMeta() {
 // Speed is handled entirely client-side: each result carries its level-50 speed
 // range, from which we derive the Scarf (×1.5), Tailwind (×2), and Scarf+Tailwind
 // (×3) ranges. The "faster than" / "slower than" targets color each speed cell
-// green when that column's range can satisfy them (max > faster, min < slower);
-// "only show matches" keeps a row if ANY speed column is green. Re-rendering from
-// the stored results makes the controls update instantly without a new search.
+// green when that column's range can satisfy them (max > faster, min < slower).
+// Clicking a speed column header filters out its red (out-of-range) rows.
+// Re-rendering from the stored results updates the controls instantly.
 function render() {
 	if (!searched) return;
 	const faster = Number($('faster').value) || 0;
 	const slower = Number($('slower').value) || 0;
 	const hasTarget = faster > 0 || slower > 0;
 	const floor = document.querySelector('input[name=floor]:checked').value;
-	const onlyMatches = $('speed-filter').checked;
 	const table = $('results');
 	const tbody = table.querySelector('tbody');
 	tbody.innerHTML = '';
@@ -113,9 +130,9 @@ function render() {
 			let match = hasTarget;
 			if (faster > 0) match = match && hi > faster;
 			if (slower > 0) match = match && lo < slower;
-			return { html: `<td class="${hasTarget ? (match ? 'in-range' : 'out-range') : ''}">${lo}–${hi}</td>`, match };
+			return { html: `<td class="${hasTarget ? (match ? 'in-range' : 'out-range') : ''}">${lo}–${hi}</td>`, red: hasTarget && !match };
 		});
-		if (onlyMatches && hasTarget && !speedCells.some(c => c.match)) continue;
+		if ([...speedFilters].some(col => speedCells[col].red)) continue;
 		const tr = document.createElement('tr');
 		const b = r.baseStats;
 		const stats = [b.hp, b.atk, b.def, b.spa, b.spd, b.spe, est(r)].map(v => `<td class="num-col">${v}</td>`).join('');
@@ -127,6 +144,7 @@ function render() {
 	table.hidden = shown === 0;
 	$('status').textContent = shown ? `${shown} match${shown === 1 ? '' : 'es'}` : 'No matches';
 	updateSortIndicators();
+	updateSpeedFilterIndicators();
 }
 
 async function runSearch(e) {
@@ -144,6 +162,7 @@ async function runSearch(e) {
 	const body = await (await fetch(`/api/search?${params}`)).json();
 	lastResults = body.results;
 	searched = true;
+	speedFilters.clear();
 	render();
 }
 
@@ -153,6 +172,6 @@ $('search-form').addEventListener('submit', runSearch);
 $('faster').addEventListener('input', render);
 $('slower').addEventListener('input', render);
 for (const radio of document.querySelectorAll('input[name=floor]')) radio.addEventListener('change', render);
-$('speed-filter').addEventListener('change', render);
+for (const th of document.querySelectorAll('th.speed-col')) th.addEventListener('click', () => toggleSpeedFilter(Number(th.dataset.col)));
 for (const th of document.querySelectorAll('th.sortable')) th.addEventListener('click', () => sortBy(th.dataset.sort));
 loadMeta();
