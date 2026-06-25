@@ -81,6 +81,10 @@ function fillSelect(select, values, { keepFirst = true, mapValue = v => v, mapLa
 
 let abilityOptions = [];
 let moveOptions = [];
+let genLabels = [];
+let genMap = {};
+let formatLabels = [];
+let formatMap = {};
 
 function isSubseq(q, s) {
 	let i = 0;
@@ -112,7 +116,7 @@ function fuzzyMatch(query, options, limit = 20) {
 }
 
 // Turn a text input into a type-ahead combobox over getOptions().
-function setupAutocomplete(input, getOptions) {
+function setupAutocomplete(input, getOptions, onSelect) {
 	const list = document.createElement('ul');
 	list.className = 'ac-list';
 	list.hidden = true;
@@ -121,7 +125,11 @@ function setupAutocomplete(input, getOptions) {
 	let active = -1;
 
 	const close = () => { list.hidden = true; active = -1; };
-	const choose = val => { input.value = val; close(); };
+	const choose = val => {
+		input.value = val;
+		close();
+		if (onSelect) onSelect(val);
+	};
 	const show = () => {
 		matches = fuzzyMatch(input.value, getOptions());
 		list.innerHTML = '';
@@ -165,17 +173,19 @@ function setupAutocomplete(input, getOptions) {
 }
 
 async function loadMeta() {
-	const gen = $('gen').value || '9';
-	const format = $('format').value;
+	const gen = genMap[$('gen').value] || '9';
+	const format = formatMap[$('format').value] || '';
 	const url = `/api/meta?gen=${encodeURIComponent(gen)}` + (format ? `&format=${encodeURIComponent(format)}` : '');
 	const meta = await (await fetch(url)).json();
 
-	if (!$('gen').options.length) {
-		fillSelect($('gen'), meta.generations, { keepFirst: false, mapLabel: g => `Gen ${g}` });
-		$('gen').value = String(Math.max(...meta.generations));
-	}
-	fillSelect($('format'), meta.formats, { mapValue: f => f.id, mapLabel: f => f.name });
-	$('format').value = format;
+	const firstLoad = genLabels.length === 0;
+	genLabels = meta.generations.map(g => `Gen ${g}`);
+	formatLabels = meta.formats.map(f => f.name);
+	// eslint-disable-next-line require-atomic-updates
+	genMap = Object.fromEntries(meta.generations.map(g => [`Gen ${g}`, String(g)]));
+	// eslint-disable-next-line require-atomic-updates
+	formatMap = Object.fromEntries(meta.formats.map(f => [f.name, f.id]));
+	if (firstLoad) $('gen').value = `Gen ${Math.max(...meta.generations)}`;
 	abilityOptions = meta.abilities;
 	moveOptions = meta.moves;
 	fillSelect($('type1'), meta.types);
@@ -235,8 +245,9 @@ function render() {
 async function runSearch(e) {
 	e.preventDefault();
 	const params = new URLSearchParams();
-	params.set('gen', $('gen').value);
-	if ($('format').value) params.set('format', $('format').value);
+	params.set('gen', genMap[$('gen').value] || '9');
+	const fmt = formatMap[$('format').value];
+	if (fmt) params.set('format', fmt);
 	if ($('ability').value) params.set('ability', $('ability').value);
 	const moves = [...document.querySelectorAll('.move')].map(s => s.value).filter(Boolean);
 	if (moves.length) params.set('moves', moves.join(','));
@@ -251,8 +262,8 @@ async function runSearch(e) {
 	render();
 }
 
-$('gen').addEventListener('change', loadMeta);
-$('format').addEventListener('change', loadMeta);
+setupAutocomplete($('gen'), () => genLabels, () => loadMeta());
+setupAutocomplete($('format'), () => formatLabels, () => loadMeta());
 $('search-form').addEventListener('submit', runSearch);
 $('faster').addEventListener('input', render);
 $('slower').addEventListener('input', render);
