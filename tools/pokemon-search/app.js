@@ -105,7 +105,7 @@ function render() {
 		const tr = document.createElement('tr');
 		const b = r.baseStats;
 		const stats = [b.hp, b.atk, b.def, b.spa, b.spd, b.spe, est(r)].map(v => `<td class="num-col">${v}</td>`).join('');
-		tr.innerHTML = `<td>${r.num}</td><td>${r.name}</td><td>${r.types.join(' / ')}</td>${stats}<td class="${cls}">${range}</td>`;
+		tr.innerHTML = `<td>${r.num}</td><td>${r.name}</td><td>${r.types.join(' / ')}</td><td>${r.abilities.join(', ')}</td>${stats}<td class="${cls}">${range}</td>`;
 		tbody.appendChild(tr);
 		shown++;
 	}
