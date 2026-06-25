@@ -80,8 +80,9 @@ async function loadMeta() {
 }
 
 // Speed is handled entirely client-side: each result carries its level-50 speed
-// range, so the desired speed only colors the range cell (green in range, red
-// out) and — when "only show matches" is checked — filters non-matching rows.
+// range, from which we derive the Tailwind (×2), Choice Scarf (×1.5), and
+// Tailwind+Scarf (×3) ranges. The desired speed colors each speed cell (green in
+// range, red out); "only show matches" keeps a row if ANY speed column is green.
 // Re-rendering from the stored results makes the speed/floor/checkbox controls
 // update instantly without a new search.
 function render() {
@@ -98,14 +99,23 @@ function render() {
 	let shown = 0;
 	for (const r of sorted) {
 		const floorSpe = floor === '31iv' ? r.speRange.min31iv : r.speRange.min0iv;
-		const inRange = speed > 0 && speed >= floorSpe && speed <= r.speRange.max;
-		if (onlyMatches && speed > 0 && !inRange) continue;
-		const cls = speed > 0 ? (inRange ? 'in-range' : 'out-range') : '';
-		const range = `${floorSpe}–${r.speRange.max}`;
+		const baseMax = r.speRange.max;
+		// Speed @ L50 ranges: base, Tailwind (×2), Choice Scarf (×1.5), Tailwind+Scarf (×3).
+		const speedRanges = [
+			[floorSpe, baseMax],
+			[floorSpe * 2, baseMax * 2],
+			[Math.floor(floorSpe * 1.5), Math.floor(baseMax * 1.5)],
+			[floorSpe * 3, baseMax * 3],
+		];
+		const speedCells = speedRanges.map(([lo, hi]) => {
+			const inRange = speed > 0 && speed >= lo && speed <= hi;
+			return { html: `<td class="${speed > 0 ? (inRange ? 'in-range' : 'out-range') : ''}">${lo}–${hi}</td>`, inRange };
+		});
+		if (onlyMatches && speed > 0 && !speedCells.some(c => c.inRange)) continue;
 		const tr = document.createElement('tr');
 		const b = r.baseStats;
 		const stats = [b.hp, b.atk, b.def, b.spa, b.spd, b.spe, est(r)].map(v => `<td class="num-col">${v}</td>`).join('');
-		tr.innerHTML = `<td>${r.num}</td><td>${r.name}</td><td>${r.types.join(' / ')}</td><td>${r.abilities.join(', ')}</td>${stats}<td class="${cls}">${range}</td>`;
+		tr.innerHTML = `<td>${r.num}</td><td>${r.name}</td><td>${r.types.join(' / ')}</td><td>${r.abilities.join(', ')}</td>${stats}${speedCells.map(c => c.html).join('')}`;
 		tbody.appendChild(tr);
 		shown++;
 	}
