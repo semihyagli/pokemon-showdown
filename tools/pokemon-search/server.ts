@@ -40,6 +40,7 @@ function handleSearch(params: URLSearchParams) {
 	const criteria: SearchCriteria = {
 		gen,
 		formatId: params.get('format') || undefined,
+		species: params.get('species') || undefined,
 		ability: params.get('ability') || undefined,
 		moves: moves.length ? moves : undefined,
 		types: types.length ? types : undefined,

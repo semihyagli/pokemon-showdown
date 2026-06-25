@@ -116,6 +116,7 @@ export function buildIndex(gen: number): GenIndex {
 export interface SearchCriteria {
 	gen: number;
 	formatId?: string;
+	species?: string;
 	ability?: string;
 	moves?: string[];
 	types?: string[];
@@ -159,6 +160,8 @@ export function search(criteria: SearchCriteria): SpeciesInfo[] {
 	let candidates = new Set(index.species.keys());
 	if (pool) candidates = intersect(candidates, pool);
 
+	if (criteria.species) candidates = intersect(candidates, new Set([toID(criteria.species)]));
+
 	// Unknown ability/move ids are skipped (ignored), not treated as "zero matches",
 	// per the spec. Dropdown-sourced values always exist in the index, so this only
 	// affects hand-typed/URL-hacked values.
@@ -196,6 +199,7 @@ export function search(criteria: SearchCriteria): SpeciesInfo[] {
 export interface Meta {
 	generations: number[];
 	formats: { id: string, name: string }[];
+	species: string[];
 	abilities: string[];
 	moves: string[];
 	types: string[];
@@ -203,16 +207,23 @@ export interface Meta {
 
 export function getMeta(gen: number, formatId?: string): Meta {
 	let effectiveGen = gen;
+	let pool: Set<string> | null = null;
 	if (formatId) {
 		const fp = formatPool(formatId);
-		if (fp) effectiveGen = fp.gen;
+		if (fp) {
+			effectiveGen = fp.gen;
+			pool = fp.allowed;
+		}
 	}
 	const index = buildIndex(effectiveGen);
 	const dex = Dex.forGen(effectiveGen);
 
 	const abilitySet = new Set<string>();
 	const typeSet = new Set<string>();
+	const species: string[] = [];
 	for (const info of index.species.values()) {
+		if (pool && !pool.has(info.id)) continue;
+		species.push(info.name);
 		for (const ability of info.abilities) abilitySet.add(ability);
 		for (const type of info.types) typeSet.add(type);
 	}
@@ -232,6 +243,7 @@ export function getMeta(gen: number, formatId?: string): Meta {
 	return {
 		generations,
 		formats,
+		species: species.sort(),
 		abilities: [...abilitySet].sort(),
 		moves: moves.sort(),
 		types: [...typeSet].sort(),

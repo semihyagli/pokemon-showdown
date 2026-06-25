@@ -79,6 +79,7 @@ function fillSelect(select, values, { keepFirst = true, mapValue = v => v, mapLa
 	}
 }
 
+let speciesOptions = [];
 let abilityOptions = [];
 let moveOptions = [];
 let genLabels = [];
@@ -186,6 +187,7 @@ async function loadMeta() {
 	// eslint-disable-next-line require-atomic-updates
 	formatMap = Object.fromEntries(meta.formats.map(f => [f.name, f.id]));
 	if (firstLoad) $('gen').value = `Gen ${Math.max(...meta.generations)}`;
+	speciesOptions = meta.species;
 	abilityOptions = meta.abilities;
 	moveOptions = meta.moves;
 	fillSelect($('type1'), meta.types);
@@ -248,6 +250,7 @@ async function runSearch(e) {
 	params.set('gen', genMap[$('gen').value] || '9');
 	const fmt = formatMap[$('format').value];
 	if (fmt) params.set('format', fmt);
+	if ($('species').value) params.set('species', $('species').value);
 	if ($('ability').value) params.set('ability', $('ability').value);
 	const moves = [...document.querySelectorAll('.move')].map(s => s.value).filter(Boolean);
 	if (moves.length) params.set('moves', moves.join(','));
@@ -270,6 +273,7 @@ $('slower').addEventListener('input', render);
 for (const radio of document.querySelectorAll('input[name=floor]')) radio.addEventListener('change', render);
 for (const th of document.querySelectorAll('th.speed-col')) th.addEventListener('click', () => toggleSpeedFilter(Number(th.dataset.col)));
 for (const th of document.querySelectorAll('th.sortable')) th.addEventListener('click', () => sortBy(th.dataset.sort));
+setupAutocomplete($('species'), () => speciesOptions);
 setupAutocomplete($('ability'), () => abilityOptions);
 for (const inp of document.querySelectorAll('.move')) setupAutocomplete(inp, () => moveOptions);
 loadMeta();
