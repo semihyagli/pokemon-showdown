@@ -123,34 +123,16 @@ export interface SearchCriteria {
 	floor?: '0iv' | '31iv';
 }
 
-// Standard singles formats map to a usage tier; restrict the pool to that tier.
-// Formats with no single tier (Doubles, Monotype, Random, etc.) fall back to
-// legality only (just the not-banned pool).
-const TIER_BY_SUFFIX: { [k: string]: string[] } = {
-	ubers: ['Uber', 'AG'],
-	ou: ['OU'],
-	uu: ['UU'],
-	ru: ['RU'],
-	nu: ['NU'],
-	pu: ['PU'],
-	zu: ['ZU'],
-	lc: ['LC'],
-};
-
 export function formatPool(formatId: string): { gen: number, allowed: Set<string> } | null {
 	const format = Dex.formats.get(formatId);
 	if (!format.exists) return null;
 	const fdex = Dex.forFormat(format);
 	const gen = fdex.gen;
 	const ruleTable = Dex.formats.getRuleTable(format);
-	const tiers = TIER_BY_SUFFIX[format.id.replace(/^gen\d+/, '')];
 	const index = buildIndex(gen);
 	const allowed = new Set<string>();
 	for (const id of index.species.keys()) {
-		const sp = fdex.species.get(id);
-		if (ruleTable.isBannedSpecies(sp)) continue;
-		if (tiers && !tiers.includes(sp.tier.replace(/[()]/g, ''))) continue;
-		allowed.add(id);
+		if (!ruleTable.isBannedSpecies(fdex.species.get(id))) allowed.add(id);
 	}
 	return { gen, allowed };
 }
