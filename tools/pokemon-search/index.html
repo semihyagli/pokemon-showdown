@@ -41,17 +41,20 @@
 				</label>
 			</div>
 			<div class="row">
-				<label>Speed @ Lv 50
-					<input type="number" id="speed" min="1" max="1000" placeholder="e.g. 120">
+				<label>Faster than (Spe @ L50)
+					<input type="number" id="faster" min="1" max="2000" placeholder="e.g. 120">
 				</label>
-				<label>Min-IV floor
-					<span class="floor">
-						<label><input type="radio" name="floor" value="0iv" checked> 0 IV</label>
-						<label><input type="radio" name="floor" value="31iv"> 31 IV</label>
-					</span>
+				<label>Slower than (Spe @ L50)
+					<input type="number" id="slower" min="1" max="2000" placeholder="e.g. 200">
 				</label>
 			</div>
-			<label class="checkbox-row"><input type="checkbox" id="speed-filter"> Only show Pokémon whose speed range matches</label>
+			<label>Min-IV floor
+				<span class="floor">
+					<label><input type="radio" name="floor" value="0iv" checked> 0 IV</label>
+					<label><input type="radio" name="floor" value="31iv"> 31 IV</label>
+				</span>
+			</label>
+			<label class="checkbox-row"><input type="checkbox" id="speed-filter"> Only show Pokémon matching the speed criteria</label>
 			<button type="submit">Search</button>
 		</form>
 		<p id="status"></p>

@@ -80,14 +80,16 @@ async function loadMeta() {
 }
 
 // Speed is handled entirely client-side: each result carries its level-50 speed
-// range, from which we derive the Tailwind (×2), Choice Scarf (×1.5), and
-// Tailwind+Scarf (×3) ranges. The desired speed colors each speed cell (green in
-// range, red out); "only show matches" keeps a row if ANY speed column is green.
-// Re-rendering from the stored results makes the speed/floor/checkbox controls
-// update instantly without a new search.
+// range, from which we derive the Scarf (×1.5), Tailwind (×2), and Scarf+Tailwind
+// (×3) ranges. The "faster than" / "slower than" targets color each speed cell
+// green when that column's range can satisfy them (max > faster, min < slower);
+// "only show matches" keeps a row if ANY speed column is green. Re-rendering from
+// the stored results makes the controls update instantly without a new search.
 function render() {
 	if (!searched) return;
-	const speed = Number($('speed').value) || 0;
+	const faster = Number($('faster').value) || 0;
+	const slower = Number($('slower').value) || 0;
+	const hasTarget = faster > 0 || slower > 0;
 	const floor = document.querySelector('input[name=floor]:checked').value;
 	const onlyMatches = $('speed-filter').checked;
 	const table = $('results');
@@ -108,10 +110,12 @@ function render() {
 			[floorSpe * 3, baseMax * 3],
 		];
 		const speedCells = speedRanges.map(([lo, hi]) => {
-			const inRange = speed > 0 && speed >= lo && speed <= hi;
-			return { html: `<td class="${speed > 0 ? (inRange ? 'in-range' : 'out-range') : ''}">${lo}–${hi}</td>`, inRange };
+			let match = hasTarget;
+			if (faster > 0) match = match && hi > faster;
+			if (slower > 0) match = match && lo < slower;
+			return { html: `<td class="${hasTarget ? (match ? 'in-range' : 'out-range') : ''}">${lo}–${hi}</td>`, match };
 		});
-		if (onlyMatches && speed > 0 && !speedCells.some(c => c.inRange)) continue;
+		if (onlyMatches && hasTarget && !speedCells.some(c => c.match)) continue;
 		const tr = document.createElement('tr');
 		const b = r.baseStats;
 		const stats = [b.hp, b.atk, b.def, b.spa, b.spd, b.spe, est(r)].map(v => `<td class="num-col">${v}</td>`).join('');
@@ -146,7 +150,8 @@ async function runSearch(e) {
 $('gen').addEventListener('change', loadMeta);
 $('format').addEventListener('change', loadMeta);
 $('search-form').addEventListener('submit', runSearch);
-$('speed').addEventListener('input', render);
+$('faster').addEventListener('input', render);
+$('slower').addEventListener('input', render);
 for (const radio of document.querySelectorAll('input[name=floor]')) radio.addEventListener('change', render);
 $('speed-filter').addEventListener('change', render);
 for (const th of document.querySelectorAll('th.sortable')) th.addEventListener('click', () => sortBy(th.dataset.sort));
