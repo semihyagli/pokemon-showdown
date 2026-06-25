@@ -18,6 +18,7 @@ function est(r) {
 const SORT_KEYS = {
 	num: (a, b) => a.num - b.num,
 	name: (a, b) => a.name.localeCompare(b.name),
+	types: (a, b) => a.types[0].localeCompare(b.types[0]) || (a.types[1] || '').localeCompare(b.types[1] || ''),
 	hp: (a, b) => a.baseStats.hp - b.baseStats.hp,
 	atk: (a, b) => a.baseStats.atk - b.baseStats.atk,
 	def: (a, b) => a.baseStats.def - b.baseStats.def,
