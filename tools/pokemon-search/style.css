@@ -7,7 +7,11 @@ label { display: grid; gap: 4px; font-size: 13px; color: #5a5d63; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 fieldset { border: 1px solid #e2e4e8; border-radius: 8px; padding: 12px; margin: 0; display: grid; gap: 12px; }
 legend { font-size: 13px; color: #5a5d63; }
-select, input[type=number] { width: 100%; box-sizing: border-box; height: 34px; padding: 0 8px; border: 1px solid #cfd2d8; border-radius: 8px; font-size: 14px; background: #fff; }
+select, input[type=number], input[type=text] { width: 100%; box-sizing: border-box; height: 34px; padding: 0 8px; border: 1px solid #cfd2d8; border-radius: 8px; font-size: 14px; background: #fff; }
+.ac { position: relative; }
+.ac-list { position: absolute; left: 0; right: 0; top: 100%; z-index: 10; margin: 2px 0 0; padding: 0; list-style: none; background: #fff; border: 1px solid #cfd2d8; border-radius: 8px; max-height: 220px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.ac-list li { padding: 6px 10px; font-size: 14px; cursor: pointer; }
+.ac-list li:hover, .ac-list li.active { background: #eef2fb; }
 .floor { display: flex; gap: 16px; align-items: center; height: 34px; }
 .floor label { flex-direction: row; align-items: center; gap: 6px; }
 button { height: 38px; border: 1px solid #2f6feb; background: #2f6feb; color: #fff; border-radius: 8px; font-size: 15px; cursor: pointer; }

@@ -79,6 +79,91 @@ function fillSelect(select, values, { keepFirst = true, mapValue = v => v, mapLa
 	}
 }
 
+let abilityOptions = [];
+let moveOptions = [];
+
+function isSubseq(q, s) {
+	let i = 0;
+	for (const ch of s) {
+		if (ch === q[i]) i++;
+		if (i === q.length) return true;
+	}
+	return i === q.length;
+}
+
+// Rank options for a query: prefix match first, then substring, then fuzzy
+// subsequence (e.g. "drco" -> "Draco Meteor"). Names/queries are compared as IDs.
+function fuzzyMatch(query, options, limit = 20) {
+	const q = query.toLowerCase().replace(/[^a-z0-9]/g, '');
+	if (!q) return [];
+	const scored = [];
+	for (const opt of options) {
+		const o = opt.toLowerCase().replace(/[^a-z0-9]/g, '');
+		const idx = o.indexOf(q);
+		let rank;
+		if (idx === 0) rank = 0;
+		else if (idx > 0) rank = 1;
+		else if (isSubseq(q, o)) rank = 2;
+		else continue;
+		scored.push([rank, opt]);
+	}
+	scored.sort((a, b) => a[0] - b[0] || a[1].length - b[1].length || a[1].localeCompare(b[1]));
+	return scored.slice(0, limit).map(s => s[1]);
+}
+
+// Turn a text input into a type-ahead combobox over getOptions().
+function setupAutocomplete(input, getOptions) {
+	const list = document.createElement('ul');
+	list.className = 'ac-list';
+	list.hidden = true;
+	input.insertAdjacentElement('afterend', list);
+	let matches = [];
+	let active = -1;
+
+	const close = () => { list.hidden = true; active = -1; };
+	const choose = val => { input.value = val; close(); };
+	const show = () => {
+		matches = fuzzyMatch(input.value, getOptions());
+		list.innerHTML = '';
+		if (!matches.length) { close(); return; }
+		matches.forEach((m, i) => {
+			const li = document.createElement('li');
+			li.textContent = m;
+			if (i === active) li.className = 'active';
+			li.addEventListener('mousedown', e => { e.preventDefault(); choose(m); });
+			list.appendChild(li);
+		});
+		list.hidden = false;
+	};
+	const highlight = () => {
+		[...list.children].forEach((li, i) => li.classList.toggle('active', i === active));
+		if (active >= 0) list.children[active].scrollIntoView({ block: 'nearest' });
+	};
+
+	input.addEventListener('input', () => { active = -1; show(); });
+	input.addEventListener('focus', () => { if (input.value) show(); });
+	input.addEventListener('blur', () => setTimeout(close, 120));
+	input.addEventListener('keydown', e => {
+		if (list.hidden) return;
+		if (e.key === 'ArrowDown') {
+			active = Math.min(active + 1, matches.length - 1);
+			e.preventDefault();
+		} else if (e.key === 'ArrowUp') {
+			active = Math.max(active - 1, 0);
+			e.preventDefault();
+		} else if (e.key === 'Enter' && active >= 0) {
+			choose(matches[active]);
+			e.preventDefault();
+		} else if (e.key === 'Escape') {
+			close();
+			return;
+		} else {
+			return;
+		}
+		highlight();
+	});
+}
+
 async function loadMeta() {
 	const gen = $('gen').value || '9';
 	const format = $('format').value;
@@ -91,8 +176,8 @@ async function loadMeta() {
 	}
 	fillSelect($('format'), meta.formats, { mapValue: f => f.id, mapLabel: f => f.name });
 	$('format').value = format;
-	fillSelect($('ability'), meta.abilities);
-	for (const sel of document.querySelectorAll('.move')) fillSelect(sel, meta.moves);
+	abilityOptions = meta.abilities;
+	moveOptions = meta.moves;
 	fillSelect($('type1'), meta.types);
 	fillSelect($('type2'), meta.types);
 }
@@ -174,4 +259,6 @@ $('slower').addEventListener('input', render);
 for (const radio of document.querySelectorAll('input[name=floor]')) radio.addEventListener('change', render);
 for (const th of document.querySelectorAll('th.speed-col')) th.addEventListener('click', () => toggleSpeedFilter(Number(th.dataset.col)));
 for (const th of document.querySelectorAll('th.sortable')) th.addEventListener('click', () => sortBy(th.dataset.sort));
+setupAutocomplete($('ability'), () => abilityOptions);
+for (const inp of document.querySelectorAll('.move')) setupAutocomplete(inp, () => moveOptions);
 loadMeta();
