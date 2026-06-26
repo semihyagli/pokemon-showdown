@@ -1,6 +1,20 @@
 {
   "editor.insertSpaces": false,
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
-  "typescript.format.semicolons": "insert"
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
+  "js/ts.format.semicolons": "insert",
+  "cSpell.words": [
+    "drco",
+    "learnset",
+    "pokedex",
+    "resistneutral",
+    "resiststab",
+    "resiststabmode",
+    "seneutral",
+    "Subseq",
+    "superstab",
+    "superstabmode",
+    "ttar",
+    "tyranitar"
+  ]
 }
