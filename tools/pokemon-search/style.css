@@ -1,40 +1,111 @@
-:root { font-family: system-ui, sans-serif; }
-body { margin: 0; background: #f5f6f8; color: #1c1d20; }
+/* Dark theme is the default (on :root); [data-theme="light"] overrides it. The
+   theme attribute is set on <html> by an inline script in index.html before first
+   paint, so there is no flash of the wrong theme. */
+:root {
+	font-family: system-ui, sans-serif;
+	color-scheme: dark;
+	--bg: #16181c;
+	--text: #e4e6eb;
+	--surface: #1e2228;
+	--border: #2c3038;
+	--muted: #9aa0aa;
+	--input-bg: #14161a;
+	--input-border: #3a3f48;
+	--ac-hover: #2a3343;
+	--accent: #3b82f6;
+	--accent-hover: #2f6feb;
+	--on-accent: #fff;
+	--row-border: #2a2e36;
+	--pin: #e2b53c;
+	--pinned-bg: #332b10;
+	--range-fg: #6ee7a0;
+	--range-bg: #15361f;
+	--out-fg: #f1a7a0;
+	--out-bg: #3a1c1a;
+	--shadow: rgba(0, 0, 0, 0.5);
+}
+:root[data-theme="light"] {
+	color-scheme: light;
+	--bg: #f5f6f8;
+	--text: #1c1d20;
+	--surface: #fff;
+	--border: #e2e4e8;
+	--muted: #5a5d63;
+	--input-bg: #fff;
+	--input-border: #cfd2d8;
+	--ac-hover: #eef2fb;
+	--accent: #2f6feb;
+	--accent-hover: #275ec9;
+	--on-accent: #fff;
+	--row-border: #eef0f3;
+	--pin: #c9a227;
+	--pinned-bg: #fffbe6;
+	--range-fg: #126b2c;
+	--range-bg: #e7f6ec;
+	--out-fg: #b42318;
+	--out-bg: #fdeceb;
+	--shadow: rgba(0, 0, 0, 0.1);
+}
+body { margin: 0; background: var(--bg); color: var(--text); }
 main { max-width: 1400px; margin: 0 auto; padding: 24px 16px 64px; }
 h1 { font-size: 22px; font-weight: 600; text-align: center; }
-form { background: #fff; border: 1px solid #e2e4e8; border-radius: 12px; padding: 16px; display: grid; gap: 12px; max-width: 720px; margin: 0 auto; }
-label { display: grid; gap: 4px; font-size: 13px; color: #5a5d63; }
+form { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: grid; gap: 12px; max-width: 720px; margin: 0 auto; }
+label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-fieldset { border: 1px solid #e2e4e8; border-radius: 8px; padding: 12px; margin: 0; display: grid; gap: 12px; }
-legend { font-size: 13px; color: #5a5d63; }
-select, input[type=number], input[type=text] { width: 100%; box-sizing: border-box; height: 34px; padding: 0 8px; border: 1px solid #cfd2d8; border-radius: 8px; font-size: 14px; background: #fff; }
+fieldset { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 0; display: grid; gap: 12px; }
+legend { font-size: 13px; color: var(--muted); }
+select, input[type=number], input[type=text] { width: 100%; box-sizing: border-box; height: 34px; padding: 0 8px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 14px; background: var(--input-bg); color: var(--text); }
 .ac { position: relative; }
-.ac-list { position: absolute; left: 0; right: 0; top: 100%; z-index: 10; margin: 2px 0 0; padding: 0; list-style: none; background: #fff; border: 1px solid #cfd2d8; border-radius: 8px; max-height: 220px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.ac-list { position: absolute; left: 0; right: 0; top: 100%; z-index: 10; margin: 2px 0 0; padding: 0; list-style: none; background: var(--surface); border: 1px solid var(--input-border); border-radius: 8px; max-height: 220px; overflow-y: auto; box-shadow: 0 4px 12px var(--shadow); }
 .ac-list li { padding: 6px 10px; font-size: 14px; cursor: pointer; }
-.ac-list li:hover, .ac-list li.active { background: #eef2fb; }
+.ac-list li:hover, .ac-list li.active { background: var(--ac-hover); }
 .floor { display: flex; gap: 16px; align-items: center; height: 34px; }
 .floor label { flex-direction: row; align-items: center; gap: 6px; }
-button { height: 38px; border: 1px solid #2f6feb; background: #2f6feb; color: #fff; border-radius: 8px; font-size: 15px; cursor: pointer; }
-button:hover { background: #275ec9; }
-#status { color: #5a5d63; font-size: 14px; }
-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e2e4e8; border-radius: 12px; overflow: hidden; }
-th, td { text-align: left; padding: 8px 10px; font-size: 13px; border-top: 1px solid #eef0f3; }
+button { height: 38px; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); border-radius: 8px; font-size: 15px; cursor: pointer; }
+button:hover { background: var(--accent-hover); }
+#status { color: var(--muted); font-size: 14px; }
+table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+th, td { text-align: left; padding: 8px 10px; font-size: 13px; border-top: 1px solid var(--row-border); }
 .num-col { text-align: center; padding-left: 6px; padding-right: 6px; }
 .pin-col { width: 22px; }
-td.pin-cell { cursor: pointer; text-align: center; color: #c9a227; user-select: none; font-size: 15px; }
-tr.pinned-row td { background: #fffbe6; }
+td.pin-cell { cursor: pointer; text-align: center; color: var(--pin); user-select: none; font-size: 15px; }
+tr.pinned-row td { background: var(--pinned-bg); }
 .table-wrap { overflow-x: auto; }
-thead th { border-top: none; color: #5a5d63; }
-.checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #1c1d20; }
+thead th { border-top: none; color: var(--muted); }
+.checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); }
 .stab-group { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 8px; }
 .stab-group .checkbox-row { height: 34px; white-space: nowrap; }
 th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
-th.sortable:hover { color: #1c1d20; }
-th.sorted { color: #1c1d20; }
-.arrow { display: inline-block; width: 1em; margin-left: 2px; text-align: center; color: #2f6feb; }
+th.sortable:hover { color: var(--text); }
+th.sorted { color: var(--text); }
+.arrow { display: inline-block; width: 1em; margin-left: 2px; text-align: center; color: var(--accent); }
 th.speed-col { cursor: pointer; user-select: none; white-space: nowrap; }
-th.speed-col:hover { color: #1c1d20; }
-th.filtering { color: #126b2c; }
-.fil { display: inline-block; width: 1em; margin-left: 2px; text-align: center; color: #126b2c; }
-td.in-range { color: #126b2c; background: #e7f6ec; font-weight: 500; }
-td.out-range { color: #b42318; background: #fdeceb; font-weight: 500; }
+th.speed-col:hover { color: var(--text); }
+th.filtering { color: var(--range-fg); }
+.fil { display: inline-block; width: 1em; margin-left: 2px; text-align: center; color: var(--range-fg); }
+td.in-range { color: var(--range-fg); background: var(--range-bg); font-weight: 500; }
+td.out-range { color: var(--out-fg); background: var(--out-bg); font-weight: 500; }
+/* Fixed theme toggle, top-right corner. Square icon button, not the accent-filled
+   form button, so it doesn't read as a primary action. */
+#theme-toggle {
+	position: fixed;
+	top: 16px;
+	right: 16px;
+	width: 38px;
+	height: 38px;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 18px;
+	line-height: 1;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	color: var(--text);
+	z-index: 20;
+}
+#theme-toggle:hover { background: var(--ac-hover); }
+/* In light mode the button offers dark mode, so give it a dark background so the
+   moon icon reads clearly instead of sitting on a near-white surface. */
+:root[data-theme="light"] #theme-toggle { background: #1e2228; border-color: #3a3f48; }
+:root[data-theme="light"] #theme-toggle:hover { background: #2a3343; }

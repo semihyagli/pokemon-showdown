@@ -1,7 +1,21 @@
 'use strict';
-/* global document */
+/* global document, localStorage */
 
 const $ = id => document.getElementById(id);
+
+// Theme toggle: the initial theme is set pre-paint by an inline script in
+// index.html (default dark). The button shows the icon of the mode it switches
+// to, flips data-theme on <html>, and persists the choice in localStorage.
+function applyThemeIcon() {
+	$('theme-toggle').textContent = document.documentElement.dataset.theme === 'dark' ? '☀️' : '🌙';
+}
+$('theme-toggle').addEventListener('click', () => {
+	const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+	document.documentElement.dataset.theme = next;
+	localStorage.setItem('pokemon-search-theme', next);
+	applyThemeIcon();
+});
+applyThemeIcon();
 
 let lastResults = [];
 let searched = false;
