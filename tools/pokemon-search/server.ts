@@ -90,7 +90,7 @@ export function startServer(port = 8080): http.Server {
 		}
 	});
 	if (port) {
-		server.listen(port, () => console.log(`Pokémon search UI: http://localhost:${port}`));
+		server.listen(port, () => console.log(`Advanced Pokémon Search UI: http://localhost:${port}`));
 	}
 	return server;
 }

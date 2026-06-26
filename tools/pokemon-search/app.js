@@ -111,7 +111,7 @@ function tokenRank(token, o) {
 // subsequence. The query is split on whitespace/hyphens into tokens that must all
 // match (e.g. "tyranitar mega" / "ttar mega" -> "Tyranitar-Mega"), so a base name
 // plus a forme suffix narrows instead of flooding. Names/queries compared as IDs.
-function fuzzyMatch(query, options, limit = 50) {
+function fuzzyMatch(query, options, limit = 100000) {
 	const tokens = query.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
 	if (!tokens.length) return [];
 	const scored = [];
