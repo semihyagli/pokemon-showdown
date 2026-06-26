@@ -5,6 +5,23 @@ const $ = id => document.getElementById(id);
 
 let lastResults = [];
 let searched = false;
+// Generation the current results were fetched for, so dex links stay correct
+// even if the gen dropdown is changed before the next search.
+let searchedGen = '9';
+
+// Smogon Dex generation codes (e.g. gen 2 = "gs" for Gold/Silver), used to build
+// per-Pokemon links like https://www.smogon.com/dex/gs/pokemon/charizard/. Smogon
+// is not in the repo data, so this is hardcoded; unmapped (future) gens fall back
+// to the latest known code.
+const SMOGON_GEN_CODES = {
+	1: 'rb', 2: 'gs', 3: 'rs', 4: 'dp', 5: 'bw', 6: 'xy', 7: 'sm', 8: 'ss', 9: 'sv',
+};
+const LATEST_SMOGON_CODE = SMOGON_GEN_CODES[Math.max(...Object.keys(SMOGON_GEN_CODES).map(Number))];
+const smogonGenCode = gen => SMOGON_GEN_CODES[Number(gen)] || LATEST_SMOGON_CODE;
+// Smogon slugs are the display name lowercased, apostrophes/periods dropped and
+// remaining runs of non-alphanumerics turned into single hyphens (e.g.
+// "Charizard-Mega-X" -> "charizard-mega-x", "Farfetch'd" -> "farfetchd").
+const smogonSlug = name => name.toLowerCase().replace(/['.’:]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 // Click-to-sort: ascending comparator per column; clicking a header toggles
 // direction. A secondary sort by dex number / name keeps ties stable.
@@ -187,6 +204,26 @@ function setupAutocomplete(input, getOptions, onSelect) {
 	});
 }
 
+// When the gen/format changes, a typed value can become invalid for the new pool
+// (e.g. the move "Light of Ruin" doesn't exist in Gen 8, or an ability is removed).
+// The engine silently ignores unknown move/ability ids, which would widen a search
+// to the whole dex, so drop any field value that is no longer a valid option. Values
+// still valid in the new pool (a species present in every gen, etc.) are kept, so
+// switching gens doesn't wipe a usable filter.
+function pruneInvalidInputs() {
+	const norm = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+	const validate = (input, options) => {
+		if (!input.value) return;
+		const want = norm(input.value);
+		if (!options.some(o => norm(o) === want)) input.value = '';
+	};
+	validate($('species'), speciesOptions);
+	validate($('resiststab'), speciesOptions);
+	validate($('superstab'), speciesOptions);
+	validate($('ability'), abilityOptions);
+	for (const inp of document.querySelectorAll('.move')) validate(inp, moveOptions);
+}
+
 async function loadMeta() {
 	const gen = genMap[$('gen').value] || '9';
 	const format = formatMap[$('format').value] || '';
@@ -206,6 +243,7 @@ async function loadMeta() {
 	moveOptions = meta.moves;
 	fillSelect($('type1'), meta.types);
 	fillSelect($('type2'), meta.types);
+	if (!firstLoad) pruneInvalidInputs();
 }
 
 // Speed is handled entirely client-side: each result carries its level-50 speed
@@ -250,7 +288,7 @@ function render() {
 		if (isPinned) tr.className = 'pinned-row';
 		const b = r.baseStats;
 		const stats = [b.hp, b.atk, b.def, b.spa, b.spd, b.spe, est(r)].map(v => `<td class="num-col">${v}</td>`).join('');
-		tr.innerHTML = `<td class="pin-cell" data-id="${r.id}" title="pin/unpin reference">${pinned.has(r.id) ? '★' : '☆'}</td><td>${r.num}</td><td>${r.name}</td><td>${r.types.join(' / ')}</td><td>${r.abilities.join(', ')}</td>${stats}${speedCells.map(c => c.html).join('')}`;
+		tr.innerHTML = `<td class="pin-cell" data-id="${r.id}" title="pin/unpin reference">${pinned.has(r.id) ? '★' : '☆'}</td><td><a href="https://pokemondb.net/pokedex/${r.num}/moves/${searchedGen}" target="_blank" rel="noopener" title="View moves on PokemonDB">${r.num}</a></td><td><a href="https://www.smogon.com/dex/${smogonGenCode(searchedGen)}/pokemon/${smogonSlug(r.name)}/" target="_blank" rel="noopener" title="View on Smogon Dex">${r.name}</a></td><td>${r.types.join(' / ')}</td><td>${r.abilities.join(', ')}</td>${stats}${speedCells.map(c => c.html).join('')}`;
 		tbody.appendChild(tr);
 		if (!isPinned) shown++;
 	}
@@ -264,7 +302,8 @@ function render() {
 async function runSearch(e) {
 	e.preventDefault();
 	const params = new URLSearchParams();
-	params.set('gen', genMap[$('gen').value] || '9');
+	searchedGen = genMap[$('gen').value] || '9';
+	params.set('gen', searchedGen);
 	const fmt = formatMap[$('format').value];
 	if (fmt) params.set('format', fmt);
 	if ($('species').value) params.set('species', $('species').value);
