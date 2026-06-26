@@ -51,7 +51,7 @@ function inGenPool(
 	sp: { exists: boolean, num: number, gen: number, isNonstandard: string | null }, gen: number
 ): boolean {
 	return sp.exists && sp.num > 0 && sp.gen <= gen &&
-		(sp.isNonstandard === null || sp.isNonstandard === 'Past');
+		(sp.isNonstandard === null || sp.isNonstandard === 'Past' || sp.isNonstandard === 'Future');
 }
 
 export function buildIndex(gen: number): GenIndex {
