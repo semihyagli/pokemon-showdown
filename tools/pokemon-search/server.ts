@@ -46,6 +46,10 @@ function handleSearch(params: URLSearchParams) {
 		types: types.length ? types : undefined,
 		speed: speed !== undefined && !Number.isNaN(speed) ? speed : undefined,
 		floor: params.get('floor') === '31iv' ? '31iv' : '0iv',
+		resistStab: params.get('resiststab') || undefined,
+		resistStabMode: params.get('resiststabmode') === 'resistneutral' ? 'resistneutral' : 'resist',
+		superStab: params.get('superstab') || undefined,
+		superStabMode: params.get('superstabmode') === 'seneutral' ? 'seneutral' : 'se',
 	};
 	const results = search(criteria);
 	return { count: results.length, results };

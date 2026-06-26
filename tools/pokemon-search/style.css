@@ -26,6 +26,8 @@ tr.pinned-row td { background: #fffbe6; }
 .table-wrap { overflow-x: auto; }
 thead th { border-top: none; color: #5a5d63; }
 .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #1c1d20; }
+.stab-group { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 8px; }
+.stab-group .checkbox-row { height: 34px; white-space: nowrap; }
 th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 th.sortable:hover { color: #1c1d20; }
 th.sorted { color: #1c1d20; }

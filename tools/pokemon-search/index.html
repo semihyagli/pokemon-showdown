@@ -44,6 +44,20 @@
 				</label>
 			</div>
 			<div class="row">
+				<div class="stab-group">
+					<label>Resists STAB from
+						<div class="ac"><input type="text" id="resiststab" autocomplete="off" placeholder="type a Pokémon…"></div>
+					</label>
+					<label class="checkbox-row" title="Also include Pokémon neutral to the STAB types, not just those that resist"><input type="checkbox" id="resiststab-neutral"> Incl. neutral</label>
+				</div>
+				<div class="stab-group">
+					<label>Super Effective STAB against
+						<div class="ac"><input type="text" id="superstab" autocomplete="off" placeholder="type a Pokémon…"></div>
+					</label>
+					<label class="checkbox-row" title="Also include Pokémon the STAB hits neutrally (not just super-effectively)"><input type="checkbox" id="superstab-neutral"> Incl. neutral</label>
+				</div>
+			</div>
+			<div class="row">
 				<label>Faster than (Spe @ L50)
 					<input type="number" id="faster" min="1" max="2000" placeholder="e.g. 120">
 				</label>

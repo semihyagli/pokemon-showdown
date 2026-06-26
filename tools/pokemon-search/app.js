@@ -97,21 +97,34 @@ function isSubseq(q, s) {
 	return i === q.length;
 }
 
+// Rank a single token against an option id: 0 = prefix, 1 = substring, 2 = fuzzy
+// subsequence (e.g. "drco" -> "Draco Meteor"), -1 = no match.
+function tokenRank(token, o) {
+	const idx = o.indexOf(token);
+	if (idx === 0) return 0;
+	if (idx > 0) return 1;
+	if (isSubseq(token, o)) return 2;
+	return -1;
+}
+
 // Rank options for a query: prefix match first, then substring, then fuzzy
-// subsequence (e.g. "drco" -> "Draco Meteor"). Names/queries are compared as IDs.
-function fuzzyMatch(query, options, limit = 20) {
-	const q = query.toLowerCase().replace(/[^a-z0-9]/g, '');
-	if (!q) return [];
+// subsequence. The query is split on whitespace/hyphens into tokens that must all
+// match (e.g. "tyranitar mega" / "ttar mega" -> "Tyranitar-Mega"), so a base name
+// plus a forme suffix narrows instead of flooding. Names/queries compared as IDs.
+function fuzzyMatch(query, options, limit = 50) {
+	const tokens = query.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+	if (!tokens.length) return [];
 	const scored = [];
 	for (const opt of options) {
 		const o = opt.toLowerCase().replace(/[^a-z0-9]/g, '');
-		const idx = o.indexOf(q);
-		let rank;
-		if (idx === 0) rank = 0;
-		else if (idx > 0) rank = 1;
-		else if (isSubseq(q, o)) rank = 2;
-		else continue;
-		scored.push([rank, opt]);
+		let rank = 0;
+		let ok = true;
+		for (const token of tokens) {
+			const r = tokenRank(token, o);
+			if (r === -1) { ok = false; break; }
+			rank += r;
+		}
+		if (ok) scored.push([rank, opt]);
 	}
 	scored.sort((a, b) => a[0] - b[0] || a[1].length - b[1].length || a[1].localeCompare(b[1]));
 	return scored.slice(0, limit).map(s => s[1]);
@@ -255,6 +268,14 @@ async function runSearch(e) {
 	const fmt = formatMap[$('format').value];
 	if (fmt) params.set('format', fmt);
 	if ($('species').value) params.set('species', $('species').value);
+	if ($('resiststab').value) {
+		params.set('resiststab', $('resiststab').value);
+		if ($('resiststab-neutral').checked) params.set('resiststabmode', 'resistneutral');
+	}
+	if ($('superstab').value) {
+		params.set('superstab', $('superstab').value);
+		if ($('superstab-neutral').checked) params.set('superstabmode', 'seneutral');
+	}
 	if ($('ability').value) params.set('ability', $('ability').value);
 	const moves = [...document.querySelectorAll('.move')].map(s => s.value).filter(Boolean);
 	if (moves.length) params.set('moves', moves.join(','));
@@ -290,6 +311,8 @@ $('results').addEventListener('click', e => {
 	render();
 });
 setupAutocomplete($('species'), () => speciesOptions);
+setupAutocomplete($('resiststab'), () => speciesOptions);
+setupAutocomplete($('superstab'), () => speciesOptions);
 setupAutocomplete($('ability'), () => abilityOptions);
 for (const inp of document.querySelectorAll('.move')) setupAutocomplete(inp, () => moveOptions);
 loadMeta();

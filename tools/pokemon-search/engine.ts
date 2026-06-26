@@ -113,6 +113,9 @@ export function buildIndex(gen: number): GenIndex {
 	return index;
 }
 
+export type ResistStabMode = 'resist' | 'resistneutral';
+export type SuperStabMode = 'se' | 'seneutral';
+
 export interface SearchCriteria {
 	gen: number;
 	formatId?: string;
@@ -122,6 +125,53 @@ export interface SearchCriteria {
 	types?: string[];
 	speed?: number;
 	floor?: '0iv' | '31iv';
+	resistStab?: string;
+	resistStabMode?: ResistStabMode;
+	superStab?: string;
+	superStabMode?: SuperStabMode;
+}
+
+// A candidate "defends" against the source's STAB if, for *every* one of the
+// source's types (its STAB types), the candidate's full type combination is not
+// hit super-effectively. Immunity and resistance both count as defending; in
+// `resistneutral` mode a neutral (1x) matchup counts too, but a single
+// super-effective STAB type disqualifies the candidate (so dual-typed defenders
+// must hold up against both STAB types at once).
+function defendsStab(
+	dex: ReturnType<typeof Dex.forGen>, stabTypes: string[], candidateTypes: string[], allowNeutral: boolean
+): boolean {
+	for (const atkType of stabTypes) {
+		// Immunity (e.g. Flying vs Ground) zeroes the whole combination regardless
+		// of the other type, so it must be checked first — getEffectiveness sums
+		// per-type modifiers and on its own can't tell immunity from neutral.
+		if (!dex.getImmunity(atkType, candidateTypes)) continue;
+		const mod = dex.getEffectiveness(atkType, candidateTypes); // >0 weak, 0 neutral, <0 resist
+		if (mod < 0) continue;
+		if (mod === 0 && allowNeutral) continue;
+		return false;
+	}
+	return true;
+}
+
+// "Super Effective STAB against <threat>": does the candidate have at least one
+// STAB type (one of its own types) that hits the threat's typing super-effectively?
+// This finds *counters* to the threat — Pokemon that can click a STAB move for
+// extra damage on it. With allowNeutral, a STAB type that lands at least neutrally
+// also counts. Aggregation is OR: one good STAB type is enough. Note the candidate
+// is the attacker here and the named Pokemon is the defender — the opposite roles
+// from defendsStab.
+function hasSuperEffectiveStab(
+	dex: ReturnType<typeof Dex.forGen>, threatTypes: string[], candidateTypes: string[], allowNeutral: boolean
+): boolean {
+	for (const stabType of candidateTypes) {
+		// If this STAB type is immune against the threat (e.g. Normal vs a Ghost
+		// threat) it deals 0, so it can never be the counter's offensive answer.
+		if (!dex.getImmunity(stabType, threatTypes)) continue;
+		const mod = dex.getEffectiveness(stabType, threatTypes); // >0 super-effective, 0 neutral, <0 resisted
+		if (mod > 0) return true;
+		if (mod === 0 && allowNeutral) return true;
+	}
+	return false;
 }
 
 export function formatPool(formatId: string): { gen: number, allowed: Set<string> } | null {
@@ -173,6 +223,41 @@ export function search(criteria: SearchCriteria): SpeciesInfo[] {
 		for (const move of criteria.moves) {
 			const set = index.moveToSpecies.get(toID(move));
 			if (set) candidates = intersect(candidates, set);
+		}
+	}
+
+	// "Resists STAB from <Pokemon>": keep only candidates whose typing resists (or,
+	// in resistneutral mode, isn't weak to) every STAB type of the named Pokemon.
+	// Types are read gen-correctly via forGen; an unknown name is ignored, matching
+	// the ability/move behavior above.
+	if (criteria.resistStab) {
+		const srcDex = Dex.forGen(gen);
+		const src = srcDex.species.get(criteria.resistStab);
+		if (src.exists && src.types.length) {
+			const allowNeutral = criteria.resistStabMode === 'resistneutral';
+			const filtered = new Set<string>();
+			for (const id of candidates) {
+				const info = index.species.get(id);
+				if (info && defendsStab(srcDex, src.types, info.types, allowNeutral)) filtered.add(id);
+			}
+			candidates = filtered;
+		}
+	}
+
+	// "Super Effective STAB against <Pokemon>": keep candidates whose own STAB hits
+	// the named Pokemon (the threat) super-effectively (or, in seneutral mode, at
+	// least neutrally) with at least one of their types — i.e. offensive counters.
+	if (criteria.superStab) {
+		const srcDex = Dex.forGen(gen);
+		const threat = srcDex.species.get(criteria.superStab);
+		if (threat.exists && threat.types.length) {
+			const allowNeutral = criteria.superStabMode === 'seneutral';
+			const filtered = new Set<string>();
+			for (const id of candidates) {
+				const info = index.species.get(id);
+				if (info && hasSuperEffectiveStab(srcDex, threat.types, info.types, allowNeutral)) filtered.add(id);
+			}
+			candidates = filtered;
 		}
 	}
 
