@@ -334,6 +334,10 @@ async function runSearch(e) {
 	if (moves.length) params.set('moves', moves.join(','));
 	const types = [$('type1').value, $('type2').value].filter(Boolean);
 	if (types.length) params.set('types', types.join(','));
+	if ($('exclude-unevolved').checked) params.set('excludeunevolved', '1');
+	for (const chip of document.querySelectorAll('#category-chips .chip')) {
+		if (chip.dataset.state !== 'any') params.set(chip.dataset.cat, chip.dataset.state);
+	}
 
 	$('status').textContent = 'Searching…';
 	const body = await (await fetch(`/api/search?${params}`)).json();
@@ -342,6 +346,15 @@ async function runSearch(e) {
 	speedFilters.clear();
 	render();
 }
+
+// Category chips cycle any -> only -> exclude -> any on click. State lives in the
+// data-state attribute (read at search time); CSS keys color/prefix off it.
+const CHIP_STATES = ['any', 'only', 'exclude'];
+$('category-chips').addEventListener('click', e => {
+	const chip = e.target.closest('.chip');
+	if (!chip) return;
+	chip.dataset.state = CHIP_STATES[(CHIP_STATES.indexOf(chip.dataset.state) + 1) % CHIP_STATES.length];
+});
 
 setupAutocomplete($('gen'), () => genLabels, () => loadMeta());
 setupAutocomplete($('format'), () => formatLabels, () => loadMeta());

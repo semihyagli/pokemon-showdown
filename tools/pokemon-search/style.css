@@ -75,6 +75,19 @@ thead th { border-top: none; color: var(--muted); }
 .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); }
 .stab-group { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 8px; }
 .stab-group .checkbox-row { height: 34px; white-space: nowrap; }
+/* Tri-state category chips: any (default), only (green, "＋" prefix), exclude
+   (red, "－" prefix). State is held in data-state and set by app.js on click. */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { width: auto; height: auto; padding: 5px 12px; font-size: 13px; line-height: 1.2; border-radius: 999px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text); cursor: pointer; user-select: none; }
+.chip:hover { border-color: var(--accent); }
+.chip[data-state="only"] { color: var(--range-fg); background: var(--range-bg); border-color: var(--range-fg); font-weight: 500; }
+.chip[data-state="only"]::before { content: "＋ "; }
+.chip[data-state="exclude"] { color: var(--out-fg); background: var(--out-bg); border-color: var(--out-fg); font-weight: 500; }
+.chip[data-state="exclude"]::before { content: "－ "; }
+.chip-hint { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.chip-key { white-space: nowrap; }
+.chip-key.only { color: var(--range-fg); }
+.chip-key.exclude { color: var(--out-fg); }
 th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 th.sortable:hover { color: var(--text); }
 th.sorted { color: var(--text); }

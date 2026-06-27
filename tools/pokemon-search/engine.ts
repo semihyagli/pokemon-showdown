@@ -36,6 +36,12 @@ export interface SpeciesInfo {
 	abilities: string[];
 	baseStats: Record<StatKey, number>;
 	speRange: SpeRange;
+	/** Not fully evolved: true if this species can still evolve (Mega doesn't count). */
+	nfe: boolean;
+	isMega: boolean;
+	isPrimal: boolean;
+	/** Species tags, e.g. "Mythical", "Restricted Legendary", "Paradox". */
+	tags: string[];
 }
 
 export interface GenIndex {
@@ -84,6 +90,10 @@ export function buildIndex(gen: number): GenIndex {
 			abilities: abilityNames,
 			baseStats: { ...sp.baseStats },
 			speRange: speedRange(sp.baseStats.spe),
+			nfe: sp.nfe,
+			isMega: !!sp.isMega,
+			isPrimal: !!sp.isPrimal,
+			tags: sp.tags.slice(),
 		});
 
 		let learnsets: (Learnset & { learnset: NonNullable<Learnset['learnset']> })[];
@@ -116,6 +126,25 @@ export function buildIndex(gen: number): GenIndex {
 export type ResistStabMode = 'resist' | 'resistneutral';
 export type SuperStabMode = 'se' | 'seneutral';
 
+// Special-category chips. Each is a tri-state filter: undefined = ignore, 'only' =
+// keep only species in the category, 'exclude' = drop species in the category.
+export const CATEGORY_KEYS = [
+	'megaprimal', 'mythical', 'restrictedlegendary', 'sublegendary', 'ultrabeast', 'paradox',
+] as const;
+export type CategoryKey = typeof CATEGORY_KEYS[number];
+export type CategoryFilter = 'only' | 'exclude';
+
+// Predicate per category: true when a species belongs to it. Mega and Primal share
+// one chip (both are battle-only formes); the rest read species tags.
+const CATEGORY_PREDICATES: Record<CategoryKey, (info: SpeciesInfo) => boolean> = {
+	megaprimal: info => info.isMega || info.isPrimal,
+	mythical: info => info.tags.includes('Mythical'),
+	restrictedlegendary: info => info.tags.includes('Restricted Legendary'),
+	sublegendary: info => info.tags.includes('Sub-Legendary'),
+	ultrabeast: info => info.tags.includes('Ultra Beast'),
+	paradox: info => info.tags.includes('Paradox'),
+};
+
 export interface SearchCriteria {
 	gen: number;
 	formatId?: string;
@@ -129,6 +158,8 @@ export interface SearchCriteria {
 	resistStabMode?: ResistStabMode;
 	superStab?: string;
 	superStabMode?: SuperStabMode;
+	excludeUnevolved?: boolean;
+	categories?: Partial<Record<CategoryKey, CategoryFilter>>;
 }
 
 // A candidate "defends" against the source's STAB if, for *every* one of the
@@ -263,10 +294,23 @@ export function search(criteria: SearchCriteria): SpeciesInfo[] {
 
 	const wantedTypes = (criteria.types ?? []).map(t => t.toLowerCase()).filter(Boolean);
 
+	// Split the category chips into the "only" set (OR-combined: a species qualifies
+	// if it is in any selected category) and the "exclude" set (drop if it is in any).
+	const cats = criteria.categories ?? {};
+	const onlyPreds: ((info: SpeciesInfo) => boolean)[] = [];
+	const excludePreds: ((info: SpeciesInfo) => boolean)[] = [];
+	for (const key of CATEGORY_KEYS) {
+		if (cats[key] === 'only') onlyPreds.push(CATEGORY_PREDICATES[key]);
+		else if (cats[key] === 'exclude') excludePreds.push(CATEGORY_PREDICATES[key]);
+	}
+
 	const results: SpeciesInfo[] = [];
 	for (const id of candidates) {
 		const info = index.species.get(id);
 		if (!info) continue;
+		if (criteria.excludeUnevolved && info.nfe) continue;
+		if (onlyPreds.length && !onlyPreds.some(p => p(info))) continue;
+		if (excludePreds.some(p => p(info))) continue;
 		if (wantedTypes.length) {
 			const have = info.types.map(t => t.toLowerCase());
 			if (!wantedTypes.every(t => have.includes(t))) continue;

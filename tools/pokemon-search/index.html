@@ -78,6 +78,19 @@
 					<label><input type="radio" name="floor" value="31iv"> 31 IV</label>
 				</span>
 			</label>
+			<fieldset>
+				<legend>Special categories</legend>
+				<label class="checkbox-row" title="Hide Pokémon that can still evolve (not fully evolved)"><input type="checkbox" id="exclude-unevolved" checked> Exclude unevolved (NFE)</label>
+				<div class="chips" id="category-chips">
+					<button type="button" class="chip" data-cat="megaprimal" data-state="any">Mega / Primal</button>
+					<button type="button" class="chip" data-cat="mythical" data-state="any">Mythical</button>
+					<button type="button" class="chip" data-cat="restrictedlegendary" data-state="any">Restricted Legendary</button>
+					<button type="button" class="chip" data-cat="sublegendary" data-state="any">Sub-Legendary</button>
+					<button type="button" class="chip" data-cat="ultrabeast" data-state="any">Ultra Beast</button>
+					<button type="button" class="chip" data-cat="paradox" data-state="any">Paradox</button>
+				</div>
+				<p class="chip-hint">Click a chip to cycle: <span class="chip-key only">＋ only</span> <span class="chip-key exclude">－ exclude</span> · no mark = any</p>
+			</fieldset>
 			<button type="submit">Search</button>
 		</form>
 		<p id="status"></p>

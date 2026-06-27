@@ -2,7 +2,7 @@ import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Dex } from '../../sim/dex';
-import { getMeta, search, type SearchCriteria } from './engine';
+import { CATEGORY_KEYS, getMeta, search, type SearchCriteria } from './engine';
 
 const STATIC_DIR = path.resolve(__dirname, '../../../tools/pokemon-search');
 const STATIC_FILES: { [k: string]: string } = {
@@ -37,6 +37,11 @@ function handleSearch(params: URLSearchParams) {
 	const types = (params.get('types') ?? '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 2);
 	const speedRaw = params.get('speed');
 	const speed = speedRaw !== null && speedRaw !== '' ? Number(speedRaw) : undefined;
+	const categories: NonNullable<SearchCriteria['categories']> = {};
+	for (const key of CATEGORY_KEYS) {
+		const v = params.get(key);
+		if (v === 'only' || v === 'exclude') categories[key] = v;
+	}
 	const criteria: SearchCriteria = {
 		gen,
 		formatId: params.get('format') || undefined,
@@ -50,6 +55,8 @@ function handleSearch(params: URLSearchParams) {
 		resistStabMode: params.get('resiststabmode') === 'resistneutral' ? 'resistneutral' : 'resist',
 		superStab: params.get('superstab') || undefined,
 		superStabMode: params.get('superstabmode') === 'seneutral' ? 'seneutral' : 'se',
+		excludeUnevolved: params.get('excludeunevolved') === '1',
+		categories,
 	};
 	const results = search(criteria);
 	return { count: results.length, results };
