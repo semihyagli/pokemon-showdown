@@ -63,6 +63,11 @@ select, input[type=number], input[type=text] { width: 100%; box-sizing: border-b
 .floor label { flex-direction: row; align-items: center; gap: 6px; }
 button { height: 38px; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); border-radius: 8px; font-size: 15px; cursor: pointer; }
 button:hover { background: var(--accent-hover); }
+.form-actions { display: grid; grid-template-columns: 1fr auto; gap: 12px; }
+/* Reset is a secondary action, so use a plain surface button instead of the
+   accent-filled primary so it doesn't compete with Search. */
+button.secondary { background: var(--surface); border-color: var(--input-border); color: var(--text); }
+button.secondary:hover { background: var(--ac-hover); border-color: var(--accent); }
 #status { color: var(--muted); font-size: 14px; }
 table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
 th, td { text-align: left; padding: 8px 10px; font-size: 13px; border-top: 1px solid var(--row-border); }

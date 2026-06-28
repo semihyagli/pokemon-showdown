@@ -356,6 +356,31 @@ $('category-chips').addEventListener('click', e => {
 	chip.dataset.state = CHIP_STATES[(CHIP_STATES.indexOf(chip.dataset.state) + 1) % CHIP_STATES.length];
 });
 
+// Reset every search option back to its default while keeping pinned Pokémon on
+// the list. The previous result set is dropped (lastResults = []), so render()
+// shows only the pinned rows; gen returns to the latest, format to any.
+function resetOptions() {
+	for (const id of ['species', 'ability', 'resiststab', 'superstab', 'faster', 'slower']) $(id).value = '';
+	for (const inp of document.querySelectorAll('.move')) inp.value = '';
+	$('resiststab-neutral').checked = false;
+	$('superstab-neutral').checked = false;
+	$('type1').value = '';
+	$('type2').value = '';
+	document.querySelector('input[name=floor][value="0iv"]').checked = true;
+	$('exclude-unevolved').checked = true;
+	for (const chip of document.querySelectorAll('#category-chips .chip')) chip.dataset.state = 'any';
+	speedFilters.clear();
+	sortKey = 'num';
+	sortDir = 1;
+	const latestGen = Math.max(...Object.values(genMap).map(Number));
+	if (Number.isFinite(latestGen)) $('gen').value = `Gen ${latestGen}`;
+	$('format').value = '';
+	lastResults = [];
+	loadMeta();
+	render();
+}
+$('reset').addEventListener('click', resetOptions);
+
 setupAutocomplete($('gen'), () => genLabels, () => loadMeta());
 setupAutocomplete($('format'), () => formatLabels, () => loadMeta());
 $('search-form').addEventListener('submit', runSearch);
