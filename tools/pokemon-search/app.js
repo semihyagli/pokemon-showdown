@@ -338,7 +338,12 @@ function render() {
 			return `<td class="num-col stat-cell" style="background:${bg};color:${fg}">${v}</td>`;
 		}).join('');
 		const stats = statCells + `<td class="num-col">${est(r)}</td>`;
-		tr.innerHTML = `<td class="pin-cell" data-id="${r.id}" title="pin/unpin reference">${pinned.has(r.id) ? '★' : '☆'}</td><td><a href="https://pokemondb.net/pokedex/${r.num}/moves/${searchedGen}" target="_blank" rel="noopener" title="View moves on PokemonDB">${r.num}</a></td><td><a href="https://www.smogon.com/dex/${smogonGenCode(searchedGen)}/pokemon/${smogonSlug(r.name)}/" target="_blank" rel="noopener" title="View on Smogon Dex">${r.name}</a></td><td>${r.types.join(' / ')}</td><td>${r.abilities.join(', ')}</td>${stats}${speedCells.map(c => c.html).join('')}`;
+		// Bulbapedia ability pages: spaces become underscores plus an "_(Ability)"
+		// suffix, e.g. "Lightning Rod" -> Lightning_Rod_(Ability).
+		const abilityLinks = r.abilities.map(a =>
+			`<a href="https://bulbapedia.bulbagarden.net/wiki/${encodeURIComponent(a.replace(/ /g, '_'))}_(Ability)" target="_blank" rel="noopener" title="View on Bulbapedia">${a}</a>`
+		).join(', ');
+		tr.innerHTML = `<td class="pin-cell" data-id="${r.id}" title="pin/unpin reference">${pinned.has(r.id) ? '★' : '☆'}</td><td><a href="https://pokemondb.net/pokedex/${r.num}/moves/${searchedGen}" target="_blank" rel="noopener" title="View moves on PokemonDB">${r.num}</a></td><td><a href="https://www.smogon.com/dex/${smogonGenCode(searchedGen)}/pokemon/${smogonSlug(r.name)}/" target="_blank" rel="noopener" title="View on Smogon Dex">${r.name}</a></td><td>${r.types.join(' / ')}</td><td>${abilityLinks}</td>${stats}${speedCells.map(c => c.html).join('')}`;
 		tbody.appendChild(tr);
 		if (!isPinned) shown++;
 	}
