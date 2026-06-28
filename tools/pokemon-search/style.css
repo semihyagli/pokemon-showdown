@@ -74,6 +74,7 @@ th, td { text-align: left; padding: 8px 10px; font-size: 13px; border-top: 1px s
 .num-col { text-align: center; padding-left: 6px; padding-right: 6px; }
 .pin-col { width: 22px; }
 td.pin-cell { cursor: pointer; text-align: center; color: var(--pin); user-select: none; font-size: 15px; }
+#pin-all { cursor: pointer; color: var(--pin); user-select: none; font-size: 15px; }
 tr.pinned-row td { background: var(--pinned-bg); }
 .table-wrap { overflow-x: auto; }
 thead th { border-top: none; color: var(--muted); }

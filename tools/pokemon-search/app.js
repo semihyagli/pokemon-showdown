@@ -352,7 +352,31 @@ function render() {
 	$('status').textContent = (shown ? `${shown} match${shown === 1 ? '' : 'es'}` : 'No matches') + (pinned.size ? ` · ${pinned.size} pinned` : '');
 	updateSortIndicators();
 	updateSpeedFilterIndicators();
+	updatePinAllIndicator();
 }
+
+// Header pin toggle: ★ when every current result is pinned (or results are empty
+// but pins exist) — clicking then removes all pins; otherwise ☆ — clicking pins
+// every current result.
+function allResultsPinned() {
+	return lastResults.length > 0 && lastResults.every(r => pinned.has(r.id));
+}
+function updatePinAllIndicator() {
+	const el = $('pin-all');
+	if (!el) return;
+	const clears = allResultsPinned() || (!lastResults.length && pinned.size > 0);
+	el.textContent = pinned.size ? (clears ? '★' : '☆') : (lastResults.length ? '☆' : '');
+	el.title = clears ? 'Remove all pins' : 'Pin all results';
+}
+function togglePinAll() {
+	if (allResultsPinned() || (!lastResults.length && pinned.size > 0)) {
+		pinned.clear();
+	} else {
+		for (const r of lastResults) pinned.set(r.id, r);
+	}
+	render();
+}
+$('pin-all').addEventListener('click', togglePinAll);
 
 async function runSearch(e) {
 	e.preventDefault();
