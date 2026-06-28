@@ -46,6 +46,38 @@ function est(r) {
 	return b.hp + b.def + b.spd + b.spe + Math.max(b.atk, b.spa);
 }
 
+// Color a base stat by tier: ≤60 is low (red, deeper the lower), 60–100 is average
+// (yellow, leaning red near 60 and green near 100), >100 is high (green), and
+// extreme values converge to blue. Implemented as a gradient over [value,[r,g,b]]
+// stops with linear interpolation between the two surrounding stops. The text color
+// flips to dark on light (yellow/green) fills so the number stays readable in both
+// themes.
+const STAT_STOPS = [
+	[0, [120, 0, 0]],
+	[60, [200, 45, 40]],
+	[80, [230, 200, 50]],
+	[100, [70, 190, 70]],
+	[150, [40, 170, 95]],
+	[200, [50, 110, 225]],
+];
+const lerp = (a, b, t) => Math.round(a + (b - a) * t);
+function statColor(v) {
+	const stops = STAT_STOPS;
+	const x = Math.max(stops[0][0], Math.min(v, stops[stops.length - 1][0]));
+	let rgb = stops[stops.length - 1][1];
+	for (let i = 1; i < stops.length; i++) {
+		if (x <= stops[i][0]) {
+			const [lo, c0] = stops[i - 1];
+			const [hi, c1] = stops[i];
+			const t = (x - lo) / (hi - lo);
+			rgb = [lerp(c0[0], c1[0], t), lerp(c0[1], c1[1], t), lerp(c0[2], c1[2], t)];
+			break;
+		}
+	}
+	const lum = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+	return { bg: `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`, fg: lum > 0.6 ? '#111' : '#fff' };
+}
+
 const SORT_KEYS = {
 	num: (a, b) => a.num - b.num,
 	name: (a, b) => a.name.localeCompare(b.name),
@@ -301,7 +333,11 @@ function render() {
 		const tr = document.createElement('tr');
 		if (isPinned) tr.className = 'pinned-row';
 		const b = r.baseStats;
-		const stats = [b.hp, b.atk, b.def, b.spa, b.spd, b.spe, est(r)].map(v => `<td class="num-col">${v}</td>`).join('');
+		const statCells = [b.hp, b.atk, b.def, b.spa, b.spd, b.spe].map(v => {
+			const { bg, fg } = statColor(v);
+			return `<td class="num-col stat-cell" style="background:${bg};color:${fg}">${v}</td>`;
+		}).join('');
+		const stats = statCells + `<td class="num-col">${est(r)}</td>`;
 		tr.innerHTML = `<td class="pin-cell" data-id="${r.id}" title="pin/unpin reference">${pinned.has(r.id) ? '★' : '☆'}</td><td><a href="https://pokemondb.net/pokedex/${r.num}/moves/${searchedGen}" target="_blank" rel="noopener" title="View moves on PokemonDB">${r.num}</a></td><td><a href="https://www.smogon.com/dex/${smogonGenCode(searchedGen)}/pokemon/${smogonSlug(r.name)}/" target="_blank" rel="noopener" title="View on Smogon Dex">${r.name}</a></td><td>${r.types.join(' / ')}</td><td>${r.abilities.join(', ')}</td>${stats}${speedCells.map(c => c.html).join('')}`;
 		tbody.appendChild(tr);
 		if (!isPinned) shown++;
